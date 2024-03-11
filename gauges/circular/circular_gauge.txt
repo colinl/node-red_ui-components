@@ -1,0 +1,248 @@
+<!-- Gauge Template CDL v1.3.0
+  Based on original work by @HotNipi 
+-->
+<template>
+    <div class="hn-sng">
+        <div class="label">{{label}}</div>
+        <svg ref="hn-gauge" width="100%" height="100%" viewBox="0 0 100 100">
+            <g>
+                <path v-for="(item, index) in sectors" :key="index" :ref="'sector-' + index" class="sector" stroke-width="5" d="M 10 90 A 47.5 47.5 25 1 1 90 90"></path>                
+            </g>
+            <g>
+                <path class="tick-minor" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.minorDivision, 0.5)"></path>
+                <path ref="arc" class="tick-major" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.majorDivision, 2)"></path>
+                
+            </g>         
+            <g>
+                <text v-for="(item, index) in numbers" :key="index" class="num" text-anchor="middle" y="-37" :style="`rotate: ${item.r}deg;`">{{item.n}}</text>
+            </g>
+            <g>
+                <text class="measurement" y="48" x="50%" text-anchor="middle">{{measurement}}</text>
+                <text class="unit" y="75" x="50%" text-anchor="middle">{{unit}}</text>
+                <text class="value" y="90" x="50%" text-anchor="middle">{{formattedValue}}</text>
+            </g>
+            <g ref="o-needle" class="o-needle">
+                <path d="M 0,0 -1.5,0 -0.15,-43 0.15,-43 1.5,0 z"></path>
+                <circle cx="0" cy="0" r="3"></circle>
+            </g>
+        </svg>
+    </div>
+</template>
+<script>
+export default{
+        data(){
+            return {
+                //define settings here
+                // Min and max scale values.  Max may be less that min.
+                //min: -50,
+                //max: 50,
+                min:0,
+                max:1.4,
+                //min:0,
+                //max:-1.4,
+                majorDivision: 0.2,       // number of input units for each (numbered) major division
+                minorDivision: 0.05,       // number of input units for each minor division
+                unit:"°C",
+                label:"Hot Water",
+                measurement:"Temperature",
+                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
+                majorDecimalPlaces: 1,    // number of decimal places to show on the scale
+                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
+                // start and end are reversed.
+                //  Any gaps are left at background colour
+                sectors:[{start:0,end:0.4,color:"skyblue"},{start:0.4,end:0.75,color:"green"},{start:0.75,end:1.4,color:"red"}],
+                //sectors:[{start:0,end:-0.4,color:"skyblue"},{start:-0.4,end:-0.75,color:"green"},{start:-0.75,end:-1.4,color:"red"}],
+                
+                //no need to change
+                value: null
+            }
+        },
+        methods:{
+            getElement: function(name,base){
+                if(base){
+                    return this.$refs[name]
+                }
+                return this.$refs[name][0]
+            },
+            validate: function(data){
+                let ret                
+                if(typeof data !== "number"){
+                    ret = parseFloat(data)
+                    if(isNaN(ret)){
+                        console.log("BAD DATA! gauge id:",this.id,"data:",data)
+                        ret = null
+                    }
+                }                    
+                else{
+                    ret = data
+                }                
+                return ret
+            },
+            range:function (n, p, r) {
+                // clamp n to be within input range
+                if (p.maxIn > p.minIn) {
+                    n = Math.min(n, p.maxIn)
+                    n = Math.max(n, p.minIn)
+                } else {
+                    n = Math.min(n, p.minIn)
+                    n = Math.max(n, p.maxIn)
+                }
+                if(r){
+                    return Math.round(((n - p.minIn) / (p.maxIn - p.minIn) * (p.maxOut - p.minOut)) + p.minOut);
+                }
+                return ((n - p.minIn) / (p.maxIn - p.minIn) * (p.maxOut - p.minOut)) + p.minOut;
+            },
+            generateNumbers:function(min,max,majorDivision){    
+                let minDegrees, maxDegrees, startValue
+                if (max > min) {
+                    minDegrees = 237.36
+                    maxDegrees = 482.64
+                    startValue = min    
+                } else {
+                    minDegrees = 482.64
+                    maxDegrees = 237.36
+                    startValue = max              
+                }
+                // Calculate number of major divisions, adding on a bit and rounding down in case last one is just off the end
+                const numDivs = Math.floor(Math.abs(max-min) / majorDivision + 0.1)
+                const degRange = maxDegrees-minDegrees
+                const degPerDiv = degRange * majorDivision/Math.abs(max-min)
+                let nums = []
+                for (let div=0; div<=numDivs; div++) {
+                    let degrees = div*degPerDiv + minDegrees
+                    const n = (startValue + div * majorDivision).toFixed(this.majorDecimalPlaces)
+                    nums.push({r: degrees, n: n})
+                }
+                return nums 
+            },
+            sectorData:function(full){               
+                let ret = []
+                this.sectors.forEach((sector,idx) => {
+                    let sec = {name:'sector-'+idx,color:sector.color}
+                    const params = {minIn:this.min, maxIn:this.max, minOut:0, maxOut:full}
+                    const start = this.range(sector.start,params,false)
+                    const end = this.range(sector.end,params,false)
+                    const pos = Math.min(start, end)
+                    const span = Math.max(start, end) - pos
+                    sec.css = `0 ${pos} ${span} var(--dash)`
+                    ret.push(sec)
+                    console.log(`sec: ${JSON.stringify(sec)}`)
+                })
+                return ret
+            },
+            rotation:function(v){
+                // allow pointer to go 10% off ends of scale
+                const overflow = (this.max-this.min)*0.1
+                const maxAngle = 122.64 * 1.2       // 1.2 as this is only half the range, so need 20%
+                const min = this.min - overflow
+                const max = this.max + overflow
+                const params = {minIn:min, maxIn:max, minOut:-maxAngle, maxOut:maxAngle};
+                if (v === null) {
+                    v = Math.min(min, max)
+                }
+                return `${this.range(v,params,false)}deg`
+            },
+            tickStyle: function(division, width) {
+                // division is the number of input units per tick
+                // width is the width (length?) of the tick in svg units
+
+                // total arc length in svg units
+                const arcLength = 203.356
+                // length in user units
+                const range = Math.abs(this.max - this.min)
+                const tickPeriod = division/range * arcLength
+                // marker is width wide, so gap is tickPeriod-width
+                // stroke-dashoffset sets the first tick to half width
+                return `stroke-dasharray: ${width} ${tickPeriod-width}; stroke-dashoffset: ${width/2};`
+            },
+        },
+        watch: {
+            msg: function(){
+                // allow undefined payload through as it will show the invalid data state
+                const v = this.validate(this.msg.payload)                   
+                // v is null if payload is invalid, this is coped with then it is displayed
+                this.value = v
+                this.getElement('o-needle',true).style.rotate = this.rotation(this.value)    
+            }
+        },
+        computed: {
+            formattedValue: function () {
+                // Show --- for the value until a valid value is recevied
+                return this.value !== null  ?  this.value.toFixed(this.valueDecimalPlaces)  :  "---"
+            },
+            numbers:function(){
+                return this.generateNumbers(this.min,this.max,this.majorDivision)
+            },
+        },
+        mounted(){
+           
+            const dal = this.getElement('arc',true).getTotalLength()
+            const sec = this.sectorData(dal)              
+            const gauge = this.getElement('hn-gauge',true)
+            gauge.style.setProperty('--dash',dal)
+            sec.forEach(s =>{
+                const sector = this.getElement(s.name,false)
+                sector.style.setProperty("stroke-dasharray",s.css)
+                sector.style.setProperty("stroke",s.color)
+            })
+            // initialise the needle off the bottom
+            this.getElement('o-needle',true).style.rotate = this.rotation(null) 
+        }
+
+    }
+</script>
+<style>
+    .hn-sng{
+        position:relative;
+    }
+    .hn-sng .label{
+        position:absolute;
+        font-size:1rem;
+        color:currentColor;
+        text-align:center;
+        width:100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .hn-sng .value {
+        fill:currentColor;
+    }
+    .hn-sng .unit {
+        fill:currentColor;
+        font-size:0.4rem;
+    }
+    .hn-sng .measurement {
+        fill:currentColor;
+        font-size:0.5rem;
+    }
+    .hn-sng .num{
+        transform-origin: center 64%;
+        transform: translate(50%, 64%);
+        fill:currentColor;
+        fill-opacity:0.6;
+        font-size:.35rem;
+    }
+    .hn-sng .tick-minor{
+        fill:none;
+        stroke:currentColor;
+        stroke-opacity:0.6;
+    }
+    .hn-sng .tick-major{
+        fill:none;
+        stroke:currentColor;
+    }
+    .hn-sng .sector{        
+        fill:none;
+        stroke:transparent;      
+    }    
+    .hn-sng .o-needle{        
+        transform-origin: center 64%;
+        transform: translate(50%, 64%);
+        transition:.5s;
+    }    
+    .hn-sng .o-needle path, .hn-sng .o-needle circle{
+        fill:black;
+    }
+    
+</style>
