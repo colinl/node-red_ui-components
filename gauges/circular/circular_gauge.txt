@@ -126,7 +126,6 @@ export default{
                     const span = Math.max(start, end) - pos
                     sec.css = `0 ${pos} ${span} var(--dash)`
                     ret.push(sec)
-                    console.log(`sec: ${JSON.stringify(sec)}`)
                 })
                 return ret
             },
