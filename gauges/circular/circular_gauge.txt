@@ -10,7 +10,7 @@
             </g>
             <g>
                 <path class="tick-minor" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.minorDivision, 0.5)"></path>
-                <path ref="arc" class="tick-major" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.majorDivision, 2)"></path>
+                <path ref="arc" class="tick-major" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.majorDivision, 1.0)"></path>
                 
             </g>         
             <g>
@@ -237,8 +237,8 @@ export default{
         stroke:transparent;      
     }    
     .hn-sng .o-needle{        
-        transform-origin: center 64%;
-        transform: translate(50%, 64%);
+        transform-origin: center 64.383%;
+        transform: translate(50%, 64.383%);
         transition:.5s;
     }    
     .hn-sng .o-needle path, .hn-sng .o-needle circle{
