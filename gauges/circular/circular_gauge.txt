@@ -1,6 +1,38 @@
 <!-- Gauge Template CDL v1.3.0
   Based on original work by @HotNipi 
 -->
+<script>
+    export default{
+        data(){
+            return {
+                //define settings here
+                // Min and max scale values.  Max may be less that min.
+                //min: -50,
+                //max: 50,
+                min:0,
+                max:1.4,
+                //min:0,
+                //max:-1.4,
+                majorDivision: 0.2,       // number of input units for each (numbered) major division
+                minorDivision: 0.05,       // number of input units for each minor division
+                unit:"°C",
+                label:"Hot Water",
+                measurement:"Temperature",
+                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
+                majorDecimalPlaces: 1,    // number of decimal places to show on the scale
+                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
+                // start and end are reversed.
+                //  Any gaps are left at background colour
+                sectors:[{start:0,end:0.4,color:"skyblue"},{start:0.4,end:0.75,color:"green"},{start:0.75,end:1.4,color:"red"}],
+                //sectors:[{start:0,end:-0.4,color:"skyblue"},{start:-0.4,end:-0.75,color:"green"},{start:-0.75,end:-1.4,color:"red"}],
+
+                //no need to change
+                value: null
+            }
+        }
+    }
+</script>
+
 <template>
     <div class="hn-sng">
         <div class="label">{{label}}</div>
@@ -28,35 +60,9 @@
         </svg>
     </div>
 </template>
+
 <script>
-export default{
-        data(){
-            return {
-                //define settings here
-                // Min and max scale values.  Max may be less that min.
-                //min: -50,
-                //max: 50,
-                min:0,
-                max:1.4,
-                //min:0,
-                //max:-1.4,
-                majorDivision: 0.2,       // number of input units for each (numbered) major division
-                minorDivision: 0.05,       // number of input units for each minor division
-                unit:"°C",
-                label:"Hot Water",
-                measurement:"Temperature",
-                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
-                majorDecimalPlaces: 1,    // number of decimal places to show on the scale
-                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
-                // start and end are reversed.
-                //  Any gaps are left at background colour
-                sectors:[{start:0,end:0.4,color:"skyblue"},{start:0.4,end:0.75,color:"green"},{start:0.75,end:1.4,color:"red"}],
-                //sectors:[{start:0,end:-0.4,color:"skyblue"},{start:-0.4,end:-0.75,color:"green"},{start:-0.75,end:-1.4,color:"red"}],
-                
-                //no need to change
-                value: null
-            }
-        },
+    export default{
         methods:{
             getElement: function(name,base){
                 if(base){
@@ -190,6 +196,7 @@ export default{
 
     }
 </script>
+
 <style>
     .hn-sng{
         position:relative;
