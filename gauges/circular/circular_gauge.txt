@@ -1,10 +1,10 @@
-<!-- Gauge Template CDL v1.3.0
+<!-- Gauge Template CDL v1.3.1
   Based on original work by @HotNipi 
 -->
 <script>
     export default{
         data(){
-            return {
+            let data = {
                 //define settings here
                 // Min and max scale values.  Max may be less that min.
                 //min: -50,
@@ -29,7 +29,21 @@
                 //no need to change
                 value: null,
                 centre: {x: 50, y: 64.383},
+                arc: {radius: 47.5, startDegrees: -122.64, endDegrees:122.64}
             }
+            // calculate derived values
+            // make sure startDegrees < endDegrees
+            while (data.arc.startDegrees >= data.arc.endDegrees) {
+                data.arc.startDegrees -= 360
+            }
+            const startRadians = data.arc.startDegrees * Math.PI/180
+            const endRadians = data.arc.endDegrees * Math.PI/180
+            data.arc.startx = data.centre.x - data.arc.radius * Math.sin(startRadians-Math.PI)
+            data.arc.starty = data.centre.y + data.arc.radius * Math.cos(startRadians-Math.PI)
+            data.arc.endx = data.centre.x + data.arc.radius * Math.sin(Math.PI-endRadians)
+            data.arc.endy = data.centre.y + data.arc.radius * Math.cos(Math.PI-endRadians)
+            data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+            return data
         }
     }
 </script>
@@ -39,15 +53,17 @@
         <div class="label">{{label}}</div>
         <svg ref="hn-gauge" width="100%" height="100%" viewBox="0 0 100 100">
             <g>
-                <path v-for="(item, index) in sectors" :key="index" :ref="'sector-' + index" class="sector" stroke-width="5" d="M 10 90 A 47.5 47.5 25 1 1 90 90"></path>                
+                <path v-for="(item, index) in sectors" :key="index" :ref="'sector-' + index" class="sector" stroke-width="5" :d="arcspec" ></path>                
             </g>
             <g>
-                <path class="tick-minor" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.minorDivision, 0.5)"></path>
-                <path ref="arc" class="tick-major" stroke-width="5" d="M 10 90 A 47.5 47.5 0 1 1 90 90" :style="tickStyle(this.majorDivision, 1.0)"></path>
+                <path class="tick-minor" stroke-width="5" :d="arcspec" :style="tickStyle(this.minorDivision, 0.5)"></path>
+                <path ref="arc" class="tick-major" stroke-width="5" :d="arcspec" :style="tickStyle(this.majorDivision, 1.0)"></path>
                 
             </g>         
             <g>
-                <text v-for="(item, index) in numbers" :key="index" class="num" text-anchor="middle" y="-37" :style="`rotate: ${item.r}deg;`">{{item.n}}</text>
+                <text v-for="(item, index) in numbers" :key="index" class="num" text-anchor="middle" :y="`${10.5-this.arc.radius}`" 
+                  :style="`rotate: ${item.r}deg; transform-origin: ${this.centre.x}% ${this.centre.y}%; transform: translate(${this.centre.x}%, ${this.centre.y}%)`">
+                  {{item.n}}</text>
             </g>
             <g>
                 <text class="measurement" y="48" x="50%" text-anchor="middle">{{measurement}}</text>
@@ -100,12 +116,12 @@
             generateNumbers:function(min,max,majorDivision){    
                 let minDegrees, maxDegrees, startValue
                 if (max > min) {
-                    minDegrees = 237.36
-                    maxDegrees = 482.64
+                    minDegrees = this.arc.startDegrees
+                    maxDegrees = this.arc.endDegrees
                     startValue = min    
                 } else {
-                    minDegrees = 482.64
-                    maxDegrees = 237.36
+                    minDegrees = this.arc.endDegrees
+                    maxDegrees = this.arc.startDegrees
                     startValue = max              
                 }
                 // Calculate number of major divisions, adding on a bit and rounding down in case last one is just off the end
@@ -137,10 +153,12 @@
             rotation:function(v){
                 // allow pointer to go 10% off ends of scale
                 const overflow = (this.max-this.min)*0.1
-                const maxAngle = 122.64 * 1.2       // 1.2 as this is only half the range, so need 20%
+                const angleOverflow = (this.arc.endDegrees - this.arc.startDegrees)*0.1 
                 const min = this.min - overflow
                 const max = this.max + overflow
-                const params = {minIn:min, maxIn:max, minOut:-maxAngle, maxOut:maxAngle};
+                const minAngle = this.arc.startDegrees - angleOverflow
+                const maxAngle = this.arc.endDegrees + angleOverflow
+                const params = {minIn:min, maxIn:max, minOut:minAngle, maxOut:maxAngle};
                 if (v === null) {
                     v = Math.min(min, max)
                 }
@@ -151,7 +169,7 @@
                 // width is the width (length?) of the tick in svg units
 
                 // total arc length in svg units
-                const arcLength = 203.356
+                const arcLength = this.arc.arcLength
                 // length in user units
                 const range = Math.abs(this.max - this.min)
                 const tickPeriod = division/range * arcLength
@@ -173,8 +191,12 @@
             needle: function() {
                 const cx = this.centre.x
                 const cy = this.centre.y
-                return `<path d="M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-43} ${cx+0.15},${cy-43} ${cx+1.5},${cy} z"></path> 
+                const length = this.arc.radius - 4.5
+                return `<path d="M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z"></path> 
                   <circle cx="${this.centre.x}" cy="${this.centre.y}" r="3"></circle>`
+            },
+            arcspec: function() {
+                return `M ${this.arc.startx} ${this.arc.starty} A ${this.arc.radius} ${this.arc.radius} 0 1 1 ${this.arc.endx} ${this.arc.endy}`
             },
             formattedValue: function () {
                 // Show --- for the value until a valid value is recevied
@@ -230,8 +252,6 @@
         font-size:0.5rem;
     }
     .hn-sng .num{
-        transform-origin: center 64%;
-        transform: translate(50%, 64%);
         fill:currentColor;
         fill-opacity:0.6;
         font-size:.35rem;
