@@ -27,7 +27,8 @@
                 //sectors:[{start:0,end:-0.4,color:"skyblue"},{start:-0.4,end:-0.75,color:"green"},{start:-0.75,end:-1.4,color:"red"}],
 
                 //no need to change
-                value: null
+                value: null,
+                centre: {x: 50, y: 64.383},
             }
         }
     }
@@ -53,9 +54,7 @@
                 <text class="unit" y="75" x="50%" text-anchor="middle">{{unit}}</text>
                 <text class="value" y="90" x="50%" text-anchor="middle">{{formattedValue}}</text>
             </g>
-            <g ref="o-needle" class="o-needle">
-                <path d="M 0,0 -1.5,0 -0.15,-43 0.15,-43 1.5,0 z"></path>
-                <circle cx="0" cy="0" r="3"></circle>
+            <g ref="o-needle" class="o-needle" v-html="needle">
             </g>
         </svg>
     </div>
@@ -167,10 +166,16 @@
                 const v = this.validate(this.msg.payload)                   
                 // v is null if payload is invalid, this is coped with then it is displayed
                 this.value = v
-                this.getElement('o-needle',true).style.rotate = this.rotation(this.value)    
+                this.getElement('o-needle',true).style.rotate = this.rotation(this.value)
             }
         },
         computed: {
+            needle: function() {
+                const cx = this.centre.x
+                const cy = this.centre.y
+                return `<path d="M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-43} ${cx+0.15},${cy-43} ${cx+1.5},${cy} z"></path> 
+                  <circle cx="${this.centre.x}" cy="${this.centre.y}" r="3"></circle>`
+            },
             formattedValue: function () {
                 // Show --- for the value until a valid value is recevied
                 return this.value !== null  ?  this.value.toFixed(this.valueDecimalPlaces)  :  "---"
@@ -190,6 +195,8 @@
                 sector.style.setProperty("stroke-dasharray",s.css)
                 sector.style.setProperty("stroke",s.color)
             })
+            // set the needle centre of rotation
+            this.getElement('o-needle',true).style["transform-origin"] = `${this.centre.x}% ${this.centre.y}%`
             // initialise the needle off the bottom
             this.getElement('o-needle',true).style.rotate = this.rotation(null) 
         }
@@ -241,12 +248,10 @@
     .hn-sng .sector{        
         fill:none;
         stroke:transparent;      
-    }    
+    } 
     .hn-sng .o-needle{        
-        transform-origin: center 64.383%;
-        transform: translate(50%, 64.383%);
         transition:.5s;
-    }    
+    }
     .hn-sng .o-needle path, .hn-sng .o-needle circle{
         fill:black;
     }
