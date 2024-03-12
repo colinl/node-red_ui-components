@@ -1,4 +1,4 @@
-<!-- Gauge Template CDL v1.3.1
+<!-- Gauge Template CDL v1.3.2
   Based on original work by @HotNipi 
 -->
 <script>
@@ -28,8 +28,7 @@
 
                 //no need to change
                 value: null,
-                centre: {x: 50, y: 64.383},
-                arc: {radius: 47.5, startDegrees: -122.64, endDegrees:122.64}
+                arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -122.64, endDegrees:122.64}
             }
             // calculate derived values
             // make sure startDegrees < endDegrees
@@ -38,10 +37,10 @@
             }
             const startRadians = data.arc.startDegrees * Math.PI/180
             const endRadians = data.arc.endDegrees * Math.PI/180
-            data.arc.startx = data.centre.x - data.arc.radius * Math.sin(startRadians-Math.PI)
-            data.arc.starty = data.centre.y + data.arc.radius * Math.cos(startRadians-Math.PI)
-            data.arc.endx = data.centre.x + data.arc.radius * Math.sin(Math.PI-endRadians)
-            data.arc.endy = data.centre.y + data.arc.radius * Math.cos(Math.PI-endRadians)
+            data.arc.startx = data.arc.cx - data.arc.radius * Math.sin(startRadians-Math.PI)
+            data.arc.starty = data.arc.cy + data.arc.radius * Math.cos(startRadians-Math.PI)
+            data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
+            data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
             data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
             return data
         }
@@ -62,7 +61,7 @@
             </g>         
             <g>
                 <text v-for="(item, index) in numbers" :key="index" class="num" text-anchor="middle" :y="`${10.5-this.arc.radius}`" 
-                  :style="`rotate: ${item.r}deg; transform-origin: ${this.centre.x}% ${this.centre.y}%; transform: translate(${this.centre.x}%, ${this.centre.y}%)`">
+                  :style="`rotate: ${item.r}deg; transform-origin: ${this.arc.cx}% ${this.arc.cy}%; transform: translate(${this.arc.cx}%, ${this.arc.cy}%)`">
                   {{item.n}}</text>
             </g>
             <g>
@@ -189,11 +188,11 @@
         },
         computed: {
             needle: function() {
-                const cx = this.centre.x
-                const cy = this.centre.y
+                const cx = this.arc.cx
+                const cy = this.arc.cy
                 const length = this.arc.radius - 4.5
                 return `<path d="M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z"></path> 
-                  <circle cx="${this.centre.x}" cy="${this.centre.y}" r="3"></circle>`
+                  <circle cx="${this.arc.cx}" cy="${this.arc.cy}" r="3"></circle>`
             },
             arcspec: function() {
                 return `M ${this.arc.startx} ${this.arc.starty} A ${this.arc.radius} ${this.arc.radius} 0 1 1 ${this.arc.endx} ${this.arc.endy}`
@@ -218,7 +217,7 @@
                 sector.style.setProperty("stroke",s.color)
             })
             // set the needle centre of rotation
-            this.getElement('o-needle',true).style["transform-origin"] = `${this.centre.x}% ${this.centre.y}%`
+            this.getElement('o-needle',true).style["transform-origin"] = `${this.arc.cx}% ${this.arc.cy}%`
             // initialise the needle off the bottom
             this.getElement('o-needle',true).style.rotate = this.rotation(null) 
         }
