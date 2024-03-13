@@ -1,4 +1,4 @@
-<!-- Gauge Template CDL v1.3.2
+<!-- Gauge Template CDL v1.4.0
   Based on original work by @HotNipi 
 -->
 <script>
@@ -26,14 +26,32 @@
                 sectors:[{start:0,end:0.4,color:"skyblue"},{start:0.4,end:0.75,color:"green"},{start:0.75,end:1.4,color:"red"}],
                 //sectors:[{start:0,end:-0.4,color:"skyblue"},{start:-0.4,end:-0.75,color:"green"},{start:-0.75,end:-1.4,color:"red"}],
 
-                //no need to change
+                // The position and alignment of the gauge inside the 100x100 svg box for the widget can be changed by modifying the settings below
+                // The origin of the svg box is the top left hand corner. The bottom right hand corner is 100,100
+                // Obviously, if you move the gauge you may have to move the text fields also.
+                // Take care with these settings, if you put silly values in the browser showing the dashboard may lock up. If this happens,
+                // close the dashboard browser tab (which may take some time as it is locked up).
+                arc: {
+                    cx:50,              // the x and y coordinates of the centre of the gauge arc
+                    cy: 64, 
+                    radius: 47.5,       // the radius of the arc
+                    startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
+                                        // +ve values are clockwise
+                    endDegrees: 123,
+                },
+                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -120, endDegrees:45}  //??
+                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: 60, endDegrees:45}  //??
+
+                //don't change this
                 value: null,
-                arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -122.64, endDegrees:122.64}
             }
             // calculate derived values
-            // make sure startDegrees < endDegrees
+            // make sure startDegrees < endDegrees, but the difference is <= 360
             while (data.arc.startDegrees >= data.arc.endDegrees) {
                 data.arc.startDegrees -= 360
+            }
+            while (data.arc.endDegrees - data.arc.startDegrees > 360) {
+                data.arc.startDegrees += 360
             }
             const startRadians = data.arc.startDegrees * Math.PI/180
             const endRadians = data.arc.endDegrees * Math.PI/180
@@ -42,6 +60,11 @@
             data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
             data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
             data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+
+            // sanity checks - probably there should be more of these
+            this.majorDivision = this.majorDivision <= 0  ?  1  : this.majorDivision
+            this.minorDivision = this.minorDivision <= 0  ?  1  : this.minorDivision
+            //console.log({arc: data.arc})
             return data
         }
     }
@@ -56,7 +79,7 @@
             </g>
             <g>
                 <path class="tick-minor" stroke-width="5" :d="arcspec" :style="tickStyle(this.minorDivision, 0.5)"></path>
-                <path ref="arc" class="tick-major" stroke-width="5" :d="arcspec" :style="tickStyle(this.majorDivision, 1.0)"></path>
+                <path ref="arc" class="tick-major" stroke-width="5" :d="arcspec" :style="tickStyle(this.majorDivision, 1)"></path>
                 
             </g>         
             <g>
@@ -150,9 +173,12 @@
                 return ret
             },
             rotation:function(v){
-                // allow pointer to go 10% off ends of scale
-                const overflow = (this.max-this.min)*0.1
-                const angleOverflow = (this.arc.endDegrees - this.arc.startDegrees)*0.1 
+                // allow pointer to go 10% off ends of scale, but not more than half way to the other end of the scale
+                const deltaDeg = this.arc.endDegrees - this.arc.startDegrees
+                const gapDeg = 360 - deltaDeg
+                const overflowFactor = Math.min(0.1, gapDeg/2/deltaDeg)
+                const overflow = (this.max-this.min)*overflowFactor
+                const angleOverflow = (deltaDeg)*overflowFactor 
                 const min = this.min - overflow
                 const max = this.max + overflow
                 const minAngle = this.arc.startDegrees - angleOverflow
@@ -195,7 +221,11 @@
                   <circle cx="${this.arc.cx}" cy="${this.arc.cy}" r="3"></circle>`
             },
             arcspec: function() {
-                return `M ${this.arc.startx} ${this.arc.starty} A ${this.arc.radius} ${this.arc.radius} 0 1 1 ${this.arc.endx} ${this.arc.endy}`
+                const delta = this.arc.endDegrees - this.arc.startDegrees
+                // if more than 180 deg sweep then large-arg-flag should be 1
+                const largeArcFlag = delta > 180  ?  1  :  0
+
+                return `M ${this.arc.startx} ${this.arc.starty} A ${this.arc.radius} ${this.arc.radius} 0 ${largeArcFlag} 1 ${this.arc.endx} ${this.arc.endy}`
             },
             formattedValue: function () {
                 // Show --- for the value until a valid value is recevied
