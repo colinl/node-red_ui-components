@@ -1,4 +1,4 @@
-<!-- Gauge Template CDL v1.4.0
+<!-- Gauge Template CDL v1.4.1
   Based on original work by @HotNipi 
 -->
 <script>
@@ -36,11 +36,8 @@
                     cy: 64, 
                     radius: 47.5,       // the radius of the arc
                     startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
-                                        // +ve values are clockwise
-                    endDegrees: 123,
+                    endDegrees: 123,	// +ve values are clockwise
                 },
-                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -120, endDegrees:45}  //??
-                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: 60, endDegrees:45}  //??
 
                 //don't change this
                 value: null,
