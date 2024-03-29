@@ -1,0 +1,1009 @@
+[
+    {
+        "id": "b603080c5881e58b",
+        "type": "subflow",
+        "name": "Gauge subflow v0.0.1",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 50,
+                "y": 30,
+                "wires": [
+                    {
+                        "id": "c6c07b308dc355e6"
+                    }
+                ]
+            }
+        ],
+        "out": [],
+        "env": [
+            {
+                "name": "Group",
+                "type": "ui-group",
+                "value": "",
+                "ui": {
+                    "type": "conf-types"
+                }
+            },
+            {
+                "name": "Width",
+                "type": "num",
+                "value": "4",
+                "ui": {
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "Height",
+                "type": "num",
+                "value": "4",
+                "ui": {
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "min",
+                "type": "num",
+                "value": "0",
+                "ui": {
+                    "label": {
+                        "en-US": "Min"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "max",
+                "type": "num",
+                "value": "10",
+                "ui": {
+                    "label": {
+                        "en-US": "Max"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "sectors",
+                "type": "json",
+                "value": "[]",
+                "ui": {
+                    "label": {
+                        "en-US": "Sectors"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "json",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "majorDivision",
+                "type": "num",
+                "value": "2",
+                "ui": {
+                    "label": {
+                        "en-US": "Major Division"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "minorDivision",
+                "type": "num",
+                "value": "0.2",
+                "ui": {
+                    "label": {
+                        "en-US": "Minor Division"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "valueDecimalPlaces",
+                "type": "num",
+                "value": "1",
+                "ui": {
+                    "label": {
+                        "en-US": "Value Decimal Places"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "scaleDecimalPlaces",
+                "type": "num",
+                "value": "0",
+                "ui": {
+                    "label": {
+                        "en-US": "Scale Decimal Places"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "num",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "label",
+                "type": "str",
+                "value": "gauge",
+                "ui": {
+                    "label": {
+                        "en-US": "Label"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "measurement",
+                "type": "str",
+                "value": "measurement",
+                "ui": {
+                    "label": {
+                        "en-US": "Measurement"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "unit",
+                "type": "str",
+                "value": "°C",
+                "ui": {
+                    "label": {
+                        "en-US": "Units"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "needles",
+                "type": "json",
+                "value": "[{\"topic\":\"\",\"colour\":\"red\",\"lengthPercent\":100}]",
+                "ui": {
+                    "label": {
+                        "en-US": "Needles"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "json",
+                            "env"
+                        ]
+                    }
+                }
+            }
+        ],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "7b0e53c2103b19d5",
+        "type": "ui-template",
+        "z": "b603080c5881e58b",
+        "group": "${Group}",
+        "page": "",
+        "ui": "",
+        "name": "Gauge template",
+        "order": 1,
+        "width": "${Width}",
+        "height": "${Height}",
+        "head": "",
+        "format": "<!-- Gauge Template CDL v1.5.0
+  Based on original work by @HotNipi 
+-->
+
+<script>
+    export default{
+        data(){
+            let data = {
+                // Min and max scale values.  Max may be less that min.
+                min:0,
+                max:1,
+                majorDivision: 10,       // number of input units for each (numbered) major division
+                minorDivision: 5,       // number of input units for each minor division
+                unit:\"\",
+                label:\"\",
+                measurement:\"\",
+                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
+                scaleDecimalPlaces: 1,    // number of decimal places to show on the scale
+                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
+                // start and end are reversed.
+                //  Any gaps are left at background colour
+                sectors:[{start:0,end:0.4,color:\"skyblue\"},{start:0.4,end:0.75,color:\"green\"},{start:0.75,end:1.4,color:\"red\"}],
+                // need to have two dummy needles as DOM elements need to be already defined when transform and rotate centre setup
+                // need to find a better way to do this
+                needles: [{topic: \"a\", lengthPercent: 100, colour: \"black\"},{topic: \"b\", lengthPercent: 100, colour: \"black\"}],
+
+                // The position and alignment of the gauge inside the 100x100 svg box for the widget can be changed by modifying the settings below
+                // The origin of the svg box is the top left hand corner. The bottom right hand corner is 100,100
+                // Obviously, if you move the gauge you may have to move the text fields also.
+                // Take care with these settings, if you put silly values in the browser showing the dashboard may lock up. If this happens,
+                // close the dashboard browser tab (which may take some time as it is locked up).
+                arc: {
+                    cx:50,              // the x and y coordinates of the centre of the gauge arc
+                    cy: 64, 
+                    radius: 47.5,       // the radius of the arc
+                    startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
+                    endDegrees: 123,    // +ve values are clockwise
+                },
+                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -120, endDegrees:45}  //??
+                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: 60, endDegrees:45}  //??
+
+                //don't change these
+                value: null,
+            }
+            // calculate derived values
+            // make sure startDegrees < endDegrees, but the difference is <= 360
+            while (data.arc.startDegrees >= data.arc.endDegrees) {
+                data.arc.startDegrees -= 360
+            }
+            while (data.arc.endDegrees - data.arc.startDegrees > 360) {
+                data.arc.startDegrees += 360
+            }
+            const startRadians = data.arc.startDegrees * Math.PI/180
+            const endRadians = data.arc.endDegrees * Math.PI/180
+            data.arc.startx = data.arc.cx - data.arc.radius * Math.sin(startRadians-Math.PI)
+            data.arc.starty = data.arc.cy + data.arc.radius * Math.cos(startRadians-Math.PI)
+            data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
+            data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
+            data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+
+            // sanity checks - probably there should be more of these
+            this.majorDivision = this.majorDivision <= 0  ?  1  : this.majorDivision
+            this.minorDivision = this.minorDivision <= 0  ?  1  : this.minorDivision
+            return data
+        }
+    }
+</script>
+
+<template>
+    <div class=\"hn-sng\">
+        <div class=\"label\">{{label}}</div>
+        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" viewBox=\"0 0 100 100\">
+            <g>
+                <path v-for=\"(item, index) in sectors\" :key=\"index\" :ref=\"'sector-' + index\" class=\"sector\" stroke-width=\"5\" :d=\"arcspec\" ></path>                
+            </g>
+            <g>
+                <path class=\"tick-minor\" stroke-width=\"5\" :d=\"arcspec\" :style=\"tickStyle(this.minorDivision, 0.5)\"></path>
+                <path ref=\"arc\" class=\"tick-major\" stroke-width=\"5\" :d=\"arcspec\" :style=\"tickStyle(this.majorDivision, 1)\"></path>
+                
+            </g>         
+            <g>
+                <text v-for=\"(item, index) in numbers\" :key=\"index\" class=\"num\" text-anchor=\"middle\" :y=\"`${10.5-this.arc.radius}`\" 
+                  :style=\"`rotate: ${item.r}deg; transform-origin: ${this.arc.cx}% ${this.arc.cy}%; transform: translate(${this.arc.cx}%, ${this.arc.cy}%)`\">
+                  {{item.n}}</text>
+            </g>
+            <g>
+                <text class=\"measurement\" y=\"48\" x=\"50%\" text-anchor=\"middle\">{{measurement}}</text>
+                <text class=\"unit\" y=\"75\" x=\"50%\" text-anchor=\"middle\">{{unit}}</text>
+                <text class=\"value\" y=\"90\" x=\"50%\" text-anchor=\"middle\">{{formattedValue}}</text>
+            </g>
+            <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\" v-html=\"needle(needles[index].lengthPercent,needles[index].colour)\">
+            </g>
+        </svg>
+    </div>
+</template>
+
+<script>
+    export default{
+        methods:{
+            getElement: function(name,base){
+                if(base){
+                    return this.$refs[name]
+                }
+                //if (!this.$refs[name]) console.log(`ref: ${name}`)
+                return this.$refs[name][0]
+            },
+            validate: function(data){
+                let ret                
+                if(typeof data !== \"number\"){
+                    ret = parseFloat(data)
+                    if(isNaN(ret)){
+                        console.log(\"BAD DATA! gauge id:\",this.id,\"data:\",data)
+                        ret = null
+                    }
+                }                    
+                else{
+                    ret = data
+                }                
+                return ret
+            },
+            range:function (n, p, r) {
+                // clamp n to be within input range
+                if (p.maxIn > p.minIn) {
+                    n = Math.min(n, p.maxIn)
+                    n = Math.max(n, p.minIn)
+                } else {
+                    n = Math.min(n, p.minIn)
+                    n = Math.max(n, p.maxIn)
+                }
+                if(r){
+                    return Math.round(((n - p.minIn) / (p.maxIn - p.minIn) * (p.maxOut - p.minOut)) + p.minOut);
+                }
+                return ((n - p.minIn) / (p.maxIn - p.minIn) * (p.maxOut - p.minOut)) + p.minOut;
+            },
+            generateNumbers:function(min,max,majorDivision){    
+                let minDegrees, maxDegrees, startValue
+                if (max > min) {
+                    minDegrees = this.arc.startDegrees
+                    maxDegrees = this.arc.endDegrees
+                    startValue = min    
+                } else {
+                    minDegrees = this.arc.endDegrees
+                    maxDegrees = this.arc.startDegrees
+                    startValue = max              
+                }
+                // Calculate number of major divisions, adding on a bit and rounding down in case last one is just off the end
+                const numDivs = Math.floor(Math.abs(max-min) / majorDivision + 0.1)
+                const degRange = maxDegrees-minDegrees
+                const degPerDiv = degRange * majorDivision/Math.abs(max-min)
+                let nums = []
+                for (let div=0; div<=numDivs; div++) {
+                    let degrees = div*degPerDiv + minDegrees
+                    const n = (startValue + div * majorDivision).toFixed(this.scaleDecimalPlaces)
+                    nums.push({r: degrees, n: n})
+                }
+                return nums 
+            },
+            sectorData:function(full){               
+                let ret = []
+                this.sectors.forEach((sector,idx) => {
+                    let sec = {name:'sector-'+idx,color:sector.color}
+                    const params = {minIn:this.min, maxIn:this.max, minOut:0, maxOut:full}
+                    const start = this.range(sector.start,params,false)
+                    const end = this.range(sector.end,params,false)
+                    const pos = Math.min(start, end)
+                    const span = Math.max(start, end) - pos
+                    sec.css = `0 ${pos} ${span} var(--dash)`
+                    ret.push(sec)
+                })
+                return ret
+            },
+            rotation:function(v){
+                // allow pointer to go 10% off ends of scale, but not more than half way to the other end of the scale
+                const deltaDeg = this.arc.endDegrees - this.arc.startDegrees
+                const gapDeg = 360 - deltaDeg
+                const overflowFactor = Math.min(0.1, gapDeg/2/deltaDeg)
+                const overflow = (this.max-this.min)*overflowFactor
+                const angleOverflow = (deltaDeg)*overflowFactor 
+                const min = this.min - overflow
+                const max = this.max + overflow
+                const minAngle = this.arc.startDegrees - angleOverflow
+                const maxAngle = this.arc.endDegrees + angleOverflow
+                const params = {minIn:min, maxIn:max, minOut:minAngle, maxOut:maxAngle};
+                if (v === null) {
+                    v = Math.min(min, max)
+                }
+                return `${this.range(v,params,false)}deg`
+            },
+            tickStyle: function(division, width) {
+                // division is the number of input units per tick
+                // width is the width (length?) of the tick in svg units
+
+                // total arc length in svg units
+                const arcLength = this.arc.arcLength
+                // length in user units
+                const range = Math.abs(this.max - this.min)
+                const tickPeriod = division/range * arcLength
+                // marker is width wide, so gap is tickPeriod-width
+                // stroke-dashoffset sets the first tick to half width
+                return `stroke-dasharray: ${width} ${tickPeriod-width}; stroke-dashoffset: ${width/2};`
+            },
+            pickupProperties: function() {
+                // pickup subflow properties from this.msg._data
+                this.data = this.msg._data
+                this.min = Number(this.data.min)
+                this.max = Number(this.data.max)
+                this.sectors = this.data.sectors
+                this.majorDivision = Number(this.data.majorDivision)
+                this.minorDivision = Number(this.data.minorDivision)
+                this.valueDecimalPlaces = Number(this.data.valueDecimalPlaces)
+                this.scaleDecimalPlaces = Number(this.data.scaleDecimalPlaces)
+                this.label = this.data.label
+                this.unit = this.data.unit
+                this.measurement = this.data.measurement
+                this.needles = this.data.needles
+                
+                // this is the first message so do the initial setup
+                const dal = this.getElement('arc',true).getTotalLength()
+                const sec = this.sectorData(dal)              
+                const gauge = this.getElement('hn-gauge',true)
+                gauge.style.setProperty('--dash',dal)
+                sec.forEach(s =>{
+                    const sector = this.getElement(s.name,false)
+                    sector.style.setProperty(\"stroke-dasharray\",s.css)
+                    sector.style.setProperty(\"stroke\",s.color)
+                })
+                // set the needle centre of rotation
+                this.needles.forEach((needle, index) => {
+                    const element = this.getElement(`o-needle-${index}`,false)
+                    element.style[\"transform-origin\"] = `${this.arc.cx}% ${this.arc.cy}%`
+                    // initialise the needle off the bottom
+                    element.style.rotate = this.rotation(null) 
+                })
+            },
+            needle: function(lengthPercent, colour) {
+                const cx = this.arc.cx
+                const cy = this.arc.cy
+                const length = (this.arc.radius - 4.5) * lengthPercent/100
+                return `<path d=\"M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z\"
+                  fill=\"${colour}\"></path> 
+                  <circle cx=\"${this.arc.cx}\" cy=\"${this.arc.cy}\" r=\"3\"></circle>`
+            },
+        },
+        watch: {
+            msg: function(){
+                console.log(`msg: ${JSON.stringify(this.msg)}`)
+                // pick up the subflow config values if they have changed
+                if (!this.data) {
+                    console.log(\"data changed\")
+                    this.pickupProperties()
+                }
+                // if only one needle then use the value in msg.payload
+                if (this.needles.length === 1) {
+                    // allow undefined payload through as it will show the invalid data state
+                    const v = this.validate(this.msg.payload)                   
+                    // v is null if payload is invalid, this is coped with then it is displayed
+                    this.value = v
+                    this.getElement('o-needle-0',false).style.rotate = this.rotation(this.value)
+                } else {
+                    // more than one needle, the values are joined by topic in msg.payload
+                    this.needles.forEach((needle, index) => {
+                        const v = this.validate(this.msg.payload[this.needles[index].topic])
+                        // the value displayed is from the first needle
+                        if (index === 0) {
+                            // v is null if payload is invalid, this is coped with then it is displayed
+                            this.value = v
+                        }
+                        this.getElement(`o-needle-${index}`,false).style.rotate = this.rotation(v)
+                    })
+                }
+            }
+        },
+        computed: {
+            arcspec: function() {
+                const delta = this.arc.endDegrees - this.arc.startDegrees
+                // if more than 180 deg sweep then large-arg-flag should be 1
+                const largeArcFlag = delta > 180  ?  1  :  0
+
+                return `M ${this.arc.startx} ${this.arc.starty} A ${this.arc.radius} ${this.arc.radius} 0 ${largeArcFlag} 1 ${this.arc.endx} ${this.arc.endy}`
+            },
+            formattedValue: function () {
+                // Show --- for the value until a valid value is recevied
+                return this.value !== null  ?  this.value.toFixed(this.valueDecimalPlaces)  :  \"---\"
+            },
+            numbers:function(){
+                return this.generateNumbers(this.min,this.max,this.majorDivision)
+            },
+        },
+        mounted(){
+        }
+
+    }
+</script>
+
+<style>
+    .hn-sng{
+        position:relative;
+    }
+    .hn-sng .label{
+        position:absolute;
+        font-size:1rem;
+        color:currentColor;
+        text-align:center;
+        width:100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .hn-sng .value {
+        fill:currentColor;
+    }
+    .hn-sng .unit {
+        fill:currentColor;
+        font-size:0.4rem;
+    }
+    .hn-sng .measurement {
+        fill:currentColor;
+        font-size:0.5rem;
+    }
+    .hn-sng .num{
+        fill:currentColor;
+        fill-opacity:0.6;
+        font-size:.35rem;
+    }
+    .hn-sng .tick-minor{
+        fill:none;
+        stroke:currentColor;
+        stroke-opacity:0.6;
+    }
+    .hn-sng .tick-major{
+        fill:none;
+        stroke:currentColor;
+    }
+    .hn-sng .sector{        
+        fill:none;
+        stroke:transparent;      
+    } 
+    .hn-sng .o-needle{        
+        transition:.5s;
+    }
+    
+</style>",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "Gauge template",
+        "x": 920,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c6c07b308dc355e6",
+        "type": "function",
+        "z": "b603080c5881e58b",
+        "name": "Load subflow properties into msg._data",
+        "func": "/**  Preparator function for gauge template
+ * 
+ * Expects:
+ * 
+ * Builds messages for sending to the template from the data provided in subflow config
+ */
+
+msg._data = buildData()
+return msg;
+
+function buildData() {
+    // builds the data object to be passed to the gauge from the env vars
+    let _data = {}
+    const vars = [\"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\", \"scaleDecimalPlaces\", \"label\", \"measurement\", 
+      \"unit\", \"needles\"]
+    vars.forEach((v) => _data[v] = env.get(v))
+    return _data
+}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 120,
+        "wires": [
+            [
+                "db2c316a64197c5c"
+            ]
+        ]
+    },
+    {
+        "id": "2b8b977e0ba829b3",
+        "type": "inject",
+        "z": "b603080c5881e58b",
+        "name": "Trigger subflow properties preload",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 210,
+        "y": 200,
+        "wires": [
+            [
+                "c6c07b308dc355e6"
+            ]
+        ]
+    },
+    {
+        "id": "db2c316a64197c5c",
+        "type": "function",
+        "z": "b603080c5881e58b",
+        "name": "Join needle values",
+        "func": "/** If there is more than one needle specified then join the payloads using topics 
+ */
+if (msg._data.needles.length > 1) {
+    let payloads = context.get(\"payloads\") || {}
+    // ignore this payload if there is not a good topic
+    if (msg.topic  &&  typeof msg.topic === \"string\"  &&  msg.topic.length > 0) {
+        payloads[msg.topic] = msg.payload
+        context.set(\"payloads\", payloads)
+    }
+    msg.payload = payloads
+}
+return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 120,
+        "wires": [
+            [
+                "7b0e53c2103b19d5"
+            ]
+        ]
+    },
+    {
+        "id": "3ab827cb8f00014a",
+        "type": "subflow:b603080c5881e58b",
+        "z": "997da33a0beedade",
+        "name": "Gauge subflow test",
+        "env": [
+            {
+                "name": "Group",
+                "value": "4f87bd59a15b847e",
+                "type": ""
+            },
+            {
+                "name": "min",
+                "value": "-5",
+                "type": "num"
+            },
+            {
+                "name": "max",
+                "value": "5",
+                "type": "num"
+            },
+            {
+                "name": "sectors",
+                "value": "[{\"start\":-5,\"end\":0.4,\"color\":\"skyblue\"},{\"start\":0.4,\"end\":0.75,\"color\":\"green\"},{\"start\":0.75,\"end\":5,\"color\":\"red\"}]",
+                "type": "json"
+            },
+            {
+                "name": "majorDivision",
+                "value": "1",
+                "type": "num"
+            },
+            {
+                "name": "needles",
+                "value": "[{\"topic\":\"A\",\"colour\":\"black\",\"lengthPercent\":100},{\"topic\":\"B\",\"colour\":\"brown\",\"lengthPercent\":67}]",
+                "type": "json"
+            },
+            {
+                "name": "Min",
+                "value": "-0.2",
+                "type": "num"
+            },
+            {
+                "name": "Max",
+                "value": "1.4",
+                "type": "num"
+            },
+            {
+                "name": "Sectors",
+                "value": "[{\"start\":0,\"end\":0.4,\"color\":\"skyblue\"},{\"start\":0.4,\"end\":0.75,\"color\":\"green\"},{\"start\":0.75,\"end\":1.4,\"color\":\"red\"}]",
+                "type": "json"
+            }
+        ],
+        "x": 530,
+        "y": 2960,
+        "wires": []
+    },
+    {
+        "id": "fb994f32ce900dda",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "B",
+        "payload": "4.5",
+        "payloadType": "num",
+        "x": 230,
+        "y": 3020,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "1cc323e3807f1bf0",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "55",
+        "payloadType": "num",
+        "x": 230,
+        "y": 3060,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "b2dff1648d75190c",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 230,
+        "y": 2900,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "fab47402dd5e5d0e",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A",
+        "payload": "1.4",
+        "payloadType": "num",
+        "x": 230,
+        "y": 2980,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "86425b5f334621b8",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "B",
+        "payload": "0.6",
+        "payloadType": "num",
+        "x": 230,
+        "y": 2940,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "a17da6d1a0739673",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A",
+        "payload": "invalid data",
+        "payloadType": "str",
+        "x": 270,
+        "y": 3100,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "b4839e916817a5bf",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "No payload",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "invalid data",
+        "x": 290,
+        "y": 3180,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "3d3c3d42fc45a684",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "-1.4",
+        "payloadType": "num",
+        "x": 290,
+        "y": 3220,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "09c96ce578d1976d",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "B",
+        "payload": "invalid data",
+        "payloadType": "str",
+        "x": 270,
+        "y": 3140,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    }
+]
