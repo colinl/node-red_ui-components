@@ -1,0 +1,539 @@
+[
+    {
+        "id": "53612691a728c07f",
+        "type": "subflow",
+        "name": "Dropdown subflow v0.0.1",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 60,
+                "y": 40,
+                "wires": [
+                    {
+                        "id": "5e1003185ef128ab"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 1040,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "90ef18d9be8d91b0",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "Group",
+                "type": "ui-group",
+                "value": "",
+                "ui": {
+                    "type": "conf-types"
+                }
+            },
+            {
+                "name": "label",
+                "type": "str",
+                "value": "Select",
+                "ui": {
+                    "label": {
+                        "en-US": "Label"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "options",
+                "type": "json",
+                "value": "[\"A\", \"B\"]",
+                "ui": {
+                    "label": {
+                        "en-US": "Options"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "json",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "topic",
+                "type": "str",
+                "value": "",
+                "ui": {
+                    "label": {
+                        "en-US": "Topic"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "waitingColour",
+                "type": "str",
+                "value": "red-lighten-5",
+                "ui": {
+                    "label": {
+                        "en-US": "Waiting Colour"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            }
+        ],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "90ef18d9be8d91b0",
+        "type": "ui-template",
+        "z": "53612691a728c07f",
+        "group": "${Group}",
+        "page": "",
+        "ui": "",
+        "name": "Dropdown template in subflow",
+        "order": 7,
+        "width": "2",
+        "height": "1",
+        "head": "",
+        "format": "<!-- DIY dropdown template with feedback  V2.0 01/03/24
+  This provides a dropdown select box with feedback indicating that confirmation has been received
+  In addition it supports enable/disable via msg.enable
+  An initialisation message must be provided containing msg._data with the configuration data
+  When the user makes a selection a message is sent with the selection in msg.payload and the current enable state 
+  in msg.enabled. In addition the background colour is changed to indicate that
+  the widget is awaiting confirmation of the selection.
+  The message will include the topic (if any) provided in the config data.
+  
+  Incoming messages should must contain a selection value in msg.payload, an enable state in msg.enabled and the config data in _data
+  When a message is received containing a valid option in msg.payload then the selection is set to that 
+  and the background is returned to normal.  All such messages should include the enable state (though it will default to enabled)
+-->  
+
+<template>
+  <div>
+    <v-select
+      :label=\"label\"
+
+      variant=\"outlined\"
+      v-model=\"value\"
+      hide-details
+      :items=\"items\"
+      :bg-color=\"color\"
+      :disabled=\"disabled\"
+    ></v-select>
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {        
+        value: null,
+        state: {},
+      }
+    },
+    watch: {
+      msg: function(){
+        //console.log(`In test watch msg: ${JSON.stringify(this.msg)}`)
+        // pickup subflow properties and current state
+        //console.log(\"data changed\")
+        this._data = this.msg._data
+        this.state = this._data?.state || {}
+
+        // the enabled state is just picked up directly from the message, we don't need to do anything
+        //console.log(`new message`)
+        // there is a new selection included. Check it is valid
+        if ((typeof this.msg.payload === \"string\") && this._data.options.includes(this.msg.payload)) { 
+          //console.log(` valid option, payload: ${this.msg.payload} value: ${this.value}`)
+          // a valid option received so set display value
+          this.value = this.msg.payload
+        }
+        // remember that this event has come from a message, not a manual user selection via GUI
+        this.state.fromManual = false
+      },
+
+      value: function () {
+        //console.log(`In watch value ${JSON.stringify(this.msg)}`)
+        // the value has changed, is this as a result of an incoming message?
+        if (this.msg.payload !== this.value) {
+          // No, so must be a manual operation, not from a message.
+          // include this in the sent message so that if the page is refreshed (which resends the last in or out message) we will know
+          this.state.fromManual = true
+          this.msg.payload = this.value
+          this.msg.topic = this._data.topic
+          this.msg._data.state = this.state
+          this.send(this.msg)
+        }
+      }
+    },
+
+    methods:{
+    },
+    
+    computed: {
+      color: function() {
+        let answer = \"\"
+        if (this.state?.fromManual) {
+          answer = this._data?.waitingColour ?? \"\"
+        }
+        return answer
+      },
+      disabled: function() {
+        // enabled is true if msg.enabled true or undefined
+        const enabled = this.msg?.enabled ?? true
+        return !enabled
+      },
+      label: function() {
+        return this.msg?._data?.label ?? \"\"
+      },
+      items: function() {
+        return this.msg?._data?.options ?? \"\"
+      },
+    },
+  }
+</script>",
+        "storeOutMessages": true,
+        "passthru": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 870,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5dcac71b702cabb0",
+        "type": "function",
+        "z": "53612691a728c07f",
+        "name": "Merge required option and enabled state",
+        "func": "/** Preparator function for DIY dropdown template v2.0
+ * 
+ * Expects either:
+ *   msg.payload containing valid option for selection
+ *   msg.enabled must not be present
+ * or
+ *   msg.enabled containing new enabled state, truthy or falsey
+ * 
+ * or
+ *   neither, which should normally only happen with the initialisation message
+ * 
+ * Builds messages for sending to the template
+ */
+let state = context.get(\"state\") || {enabled: true}
+
+if (typeof msg.enabled !== \"undefined\" && msg.enabled !== null) {
+    state.enabled = msg.enabled
+} else {
+    if (typeof msg.payload === \"string\") {
+        state.payload = msg.payload
+    }
+}
+context.set(\"state\", state)
+msg.enabled = state.enabled
+msg.payload = state.payload
+
+return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 180,
+        "wires": [
+            [
+                "90ef18d9be8d91b0"
+            ]
+        ]
+    },
+    {
+        "id": "5e1003185ef128ab",
+        "type": "function",
+        "z": "53612691a728c07f",
+        "name": "Load subflow properties into msg._data",
+        "func": "/**  Preparator function for gauge template
+ * 
+ * Builds messages for sending to the template from the data provided in subflow config
+ */
+
+// array of env vars defined in the subflow properties dialog
+const vars = [\"label\", \"options\", \"topic\", \"waitingColour\"]
+
+msg._data = buildData()
+return msg;
+
+function buildData() {
+    // builds the data object to be passed to the gauge from the env vars
+    let _data = {}
+    vars.forEach((v) => _data[v] = env.get(v))
+    return _data
+}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 40,
+        "wires": [
+            [
+                "5dcac71b702cabb0"
+            ]
+        ]
+    },
+    {
+        "id": "2065dc56ce745252",
+        "type": "inject",
+        "z": "53612691a728c07f",
+        "name": "Trigger subflow properties preload",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 200,
+        "y": 120,
+        "wires": [
+            [
+                "5e1003185ef128ab"
+            ]
+        ]
+    },
+    {
+        "id": "130ca7184b934817",
+        "type": "subflow:53612691a728c07f",
+        "z": "997da33a0beedade",
+        "name": "Set at dropdown subflow",
+        "env": [
+            {
+                "name": "Group",
+                "value": "4f87bd59a15b847e",
+                "type": ""
+            },
+            {
+                "name": "label",
+                "value": "Select option",
+                "type": "str"
+            },
+            {
+                "name": "options",
+                "value": "[\"05\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"60\",\"70\",\"80\"]",
+                "type": "json"
+            },
+            {
+                "name": "topic",
+                "value": "some/topic",
+                "type": "str"
+            }
+        ],
+        "x": 450,
+        "y": 3360,
+        "wires": [
+            [
+                "0178aa7652f14ee4"
+            ]
+        ]
+    },
+    {
+        "id": "0178aa7652f14ee4",
+        "type": "delay",
+        "z": "997da33a0beedade",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 640,
+        "y": 3460,
+        "wires": [
+            [
+                "e98c698feb06b6d3"
+            ]
+        ]
+    },
+    {
+        "id": "1e42c058400f1198",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "05",
+        "payloadType": "str",
+        "x": 130,
+        "y": 3320,
+        "wires": [
+            [
+                "130ca7184b934817"
+            ]
+        ]
+    },
+    {
+        "id": "cc8c8dc8f0aebc09",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "20",
+        "payloadType": "str",
+        "x": 130,
+        "y": 3360,
+        "wires": [
+            [
+                "130ca7184b934817"
+            ]
+        ]
+    },
+    {
+        "id": "94a3831a9ff481b3",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "Enabled",
+        "props": [
+            {
+                "p": "enabled",
+                "v": "true",
+                "vt": "bool"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 3420,
+        "wires": [
+            [
+                "130ca7184b934817"
+            ]
+        ]
+    },
+    {
+        "id": "3a7ad374faefe886",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "name": "Disabled",
+        "props": [
+            {
+                "p": "enabled",
+                "v": "false",
+                "vt": "bool"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 3460,
+        "wires": [
+            [
+                "130ca7184b934817"
+            ]
+        ]
+    },
+    {
+        "id": "e98c698feb06b6d3",
+        "type": "change",
+        "z": "997da33a0beedade",
+        "name": "",
+        "rules": [
+            {
+                "t": "delete",
+                "p": "enabled",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 850,
+        "y": 3460,
+        "wires": [
+            [
+                "130ca7184b934817"
+            ]
+        ]
+    }
+]
