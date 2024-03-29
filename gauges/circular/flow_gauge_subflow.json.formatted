@@ -3,7 +3,7 @@
         "id": "0d51f6a2bae0f159",
         "type": "group",
         "z": "997da33a0beedade",
-        "name": "Nodes for export to node red ui components",
+        "name": "Group to export to node red ui components",
         "style": {
             "label": true
         },
@@ -28,7 +28,7 @@
     {
         "id": "b603080c5881e58b",
         "type": "subflow",
-        "name": "Gauge subflow v0.0.2",
+        "name": "Gauge subflow v0.0.3",
         "info": "",
         "category": "",
         "in": [
@@ -305,9 +305,8 @@
                 // start and end are reversed.
                 //  Any gaps are left at background colour
                 sectors:[{start:0,end:0.4,color:\"skyblue\"},{start:0.4,end:0.75,color:\"green\"},{start:0.75,end:1.4,color:\"red\"}],
-                // need to have two dummy needles as DOM elements need to be already defined when transform and rotate centre setup
-                // need to find a better way to do this
-                needles: [{topic: \"a\", lengthPercent: 100, colour: \"black\"},{topic: \"b\", lengthPercent: 100, colour: \"black\"}],
+
+                needles: [],
 
                 // The position and alignment of the gauge inside the 100x100 svg box for the widget can be changed by modifying the settings below
                 // The origin of the svg box is the top left hand corner. The bottom right hand corner is 100,100
@@ -371,7 +370,9 @@
                 <text class=\"unit\" y=\"75\" x=\"50%\" text-anchor=\"middle\">{{unit}}</text>
                 <text class=\"value\" y=\"90\" x=\"50%\" text-anchor=\"middle\">{{formattedValue}}</text>
             </g>
-            <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\"  style=\"transform-box: fill-box; transform-origin: 50% 100%;\" v-html=\"needle(needles[index].lengthPercent,needles[index].colour)\">
+            <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\" 
+              :style=\"`transform-box: fill-box; transform-origin: 50% 100%; rotate: ${item.rotation}`\"
+              v-html=\"needle(needles[index].lengthPercent,needles[index].colour)\">
             </g>
             <g>
                 <circle class=\"hub\" :cx=\"`${this.arc.cx}`\" :cy=\"`${this.arc.cy}`\" r=\"3\"></circle>
@@ -527,25 +528,17 @@
                     console.log(\"data changed\")
                     this.pickupProperties()
                 }
-                // if only one needle then use the value in msg.payload
-                if (this.needles.length === 1) {
-                    // allow undefined payload through as it will show the invalid data state
-                    const v = this.validate(this.msg.payload)                   
-                    // v is null if payload is invalid, this is coped with then it is displayed
-                    this.value = v
-                    this.getElement('o-needle-0',false).style.rotate = this.rotation(this.value)
-                } else {
-                    // more than one needle, the values are joined by topic in msg.payload
-                    this.needles.forEach((needle, index) => {
-                        const v = this.validate(this.msg.payload[this.needles[index].topic])
-                        // the value displayed is from the first needle
-                        if (index === 0) {
-                            // v is null if payload is invalid, this is coped with then it is displayed
-                            this.value = v
-                        }
-                        this.getElement(`o-needle-${index}`,false).style.rotate = this.rotation(v)
-                    })
-                }
+                // pickup values and rotation
+                this.needles.forEach((needle, index) => {
+                    const value = this.needles.length === 1  ?  this.msg.payload  :  this.msg.payload[needle.topic]
+                    const v = this.validate(value)
+                    // the value displayed is from the first needle
+                    if (index === 0) {
+                        // value displayed is for the first needle
+                        this.value = v
+                    }
+                    needle.rotation = this.rotation(v)
+                })
             }
         },
         computed: {
@@ -804,7 +797,8 @@ return msg;",
         "y": 3020,
         "wires": [
             [
-                "3ab827cb8f00014a"
+                "3ab827cb8f00014a",
+                "f2730ea02e3f2b57"
             ]
         ]
     },
@@ -860,7 +854,8 @@ return msg;",
         "y": 2900,
         "wires": [
             [
-                "3ab827cb8f00014a"
+                "3ab827cb8f00014a",
+                "f2730ea02e3f2b57"
             ]
         ]
     },
@@ -920,7 +915,8 @@ return msg;",
         "y": 2940,
         "wires": [
             [
-                "3ab827cb8f00014a"
+                "3ab827cb8f00014a",
+                "f2730ea02e3f2b57"
             ]
         ]
     },
@@ -1001,7 +997,8 @@ return msg;",
         "y": 3220,
         "wires": [
             [
-                "3ab827cb8f00014a"
+                "3ab827cb8f00014a",
+                "f2730ea02e3f2b57"
             ]
         ]
     },
@@ -1061,7 +1058,8 @@ return msg;",
         "y": 2860,
         "wires": [
             [
-                "3ab827cb8f00014a"
+                "3ab827cb8f00014a",
+                "f2730ea02e3f2b57"
             ]
         ]
     }
