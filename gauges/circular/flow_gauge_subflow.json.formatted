@@ -1,8 +1,34 @@
 [
     {
+        "id": "0d51f6a2bae0f159",
+        "type": "group",
+        "z": "997da33a0beedade",
+        "name": "Nodes for export to node red ui components",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "3ab827cb8f00014a",
+            "fb994f32ce900dda",
+            "1cc323e3807f1bf0",
+            "b2dff1648d75190c",
+            "fab47402dd5e5d0e",
+            "86425b5f334621b8",
+            "a17da6d1a0739673",
+            "b4839e916817a5bf",
+            "3d3c3d42fc45a684",
+            "09c96ce578d1976d",
+            "c34fa1e1b9b2a179"
+        ],
+        "x": 134,
+        "y": 2819,
+        "w": 512,
+        "h": 442
+    },
+    {
         "id": "b603080c5881e58b",
         "type": "subflow",
-        "name": "Gauge subflow v0.0.1",
+        "name": "Gauge subflow v0.0.2",
         "info": "",
         "category": "",
         "in": [
@@ -295,8 +321,6 @@
                     startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
                     endDegrees: 123,    // +ve values are clockwise
                 },
-                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: -120, endDegrees:45}  //??
-                //arc: {cx:50, cy: 64.383, radius: 47.5, startDegrees: 60, endDegrees:45}  //??
 
                 //don't change these
                 value: null,
@@ -347,7 +371,10 @@
                 <text class=\"unit\" y=\"75\" x=\"50%\" text-anchor=\"middle\">{{unit}}</text>
                 <text class=\"value\" y=\"90\" x=\"50%\" text-anchor=\"middle\">{{formattedValue}}</text>
             </g>
-            <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\" v-html=\"needle(needles[index].lengthPercent,needles[index].colour)\">
+            <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\"  style=\"transform-box: fill-box; transform-origin: 50% 100%;\" v-html=\"needle(needles[index].lengthPercent,needles[index].colour)\">
+            </g>
+            <g>
+                <circle class=\"hub\" :cx=\"`${this.arc.cx}`\" :cy=\"`${this.arc.cy}`\" r=\"3\"></circle>
             </g>
         </svg>
     </div>
@@ -483,21 +510,13 @@
                     sector.style.setProperty(\"stroke-dasharray\",s.css)
                     sector.style.setProperty(\"stroke\",s.color)
                 })
-                // set the needle centre of rotation
-                this.needles.forEach((needle, index) => {
-                    const element = this.getElement(`o-needle-${index}`,false)
-                    element.style[\"transform-origin\"] = `${this.arc.cx}% ${this.arc.cy}%`
-                    // initialise the needle off the bottom
-                    element.style.rotate = this.rotation(null) 
-                })
             },
             needle: function(lengthPercent, colour) {
                 const cx = this.arc.cx
                 const cy = this.arc.cy
                 const length = (this.arc.radius - 4.5) * lengthPercent/100
                 return `<path d=\"M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z\"
-                  fill=\"${colour}\"></path> 
-                  <circle cx=\"${this.arc.cx}\" cy=\"${this.arc.cy}\" r=\"3\"></circle>`
+                  fill=\"${colour}\"></path>`
             },
         },
         watch: {
@@ -706,11 +725,12 @@ return msg;",
         "id": "3ab827cb8f00014a",
         "type": "subflow:b603080c5881e58b",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "Gauge subflow test",
         "env": [
             {
                 "name": "Group",
-                "value": "4f87bd59a15b847e",
+                "value": "3bc0ca5c8bac5022",
                 "type": ""
             },
             {
@@ -762,6 +782,7 @@ return msg;",
         "id": "fb994f32ce900dda",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -791,6 +812,7 @@ return msg;",
         "id": "1cc323e3807f1bf0",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -816,6 +838,7 @@ return msg;",
         "id": "b2dff1648d75190c",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -845,6 +868,7 @@ return msg;",
         "id": "fab47402dd5e5d0e",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -874,6 +898,7 @@ return msg;",
         "id": "86425b5f334621b8",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -903,6 +928,7 @@ return msg;",
         "id": "a17da6d1a0739673",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -932,6 +958,7 @@ return msg;",
         "id": "b4839e916817a5bf",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "No payload",
         "props": [
             {
@@ -956,6 +983,7 @@ return msg;",
         "id": "3d3c3d42fc45a684",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -981,6 +1009,7 @@ return msg;",
         "id": "09c96ce578d1976d",
         "type": "inject",
         "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
         "name": "",
         "props": [
             {
@@ -1000,6 +1029,36 @@ return msg;",
         "payloadType": "str",
         "x": 270,
         "y": 3140,
+        "wires": [
+            [
+                "3ab827cb8f00014a"
+            ]
+        ]
+    },
+    {
+        "id": "c34fa1e1b9b2a179",
+        "type": "inject",
+        "z": "997da33a0beedade",
+        "g": "0d51f6a2bae0f159",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A",
+        "payload": "5",
+        "payloadType": "num",
+        "x": 230,
+        "y": 2860,
         "wires": [
             [
                 "3ab827cb8f00014a"
