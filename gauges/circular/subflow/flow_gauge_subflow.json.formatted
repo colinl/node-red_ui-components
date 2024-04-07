@@ -3,7 +3,7 @@
         "id": "0d51f6a2bae0f159",
         "type": "group",
         "z": "997da33a0beedade",
-        "name": "Group to export to node red ui components",
+        "name": "Gauge - Group to export to node red ui components",
         "style": {
             "label": true
         },
@@ -273,7 +273,7 @@ Multi line is supported.",
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.3",
+            "version": "0.0.4-Beta.1",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -296,7 +296,7 @@ A longer **help text** could go here\
         "width": "${Width}",
         "height": "${Height}",
         "head": "",
-        "format": "<!-- Gauge Template CDL v1.5.0
+        "format": "<!-- Gauge Template CDL v1.5.1
   Based on original work by @HotNipi 
 -->
 
@@ -642,26 +642,25 @@ A longer **help text** could go here\
         "name": "Load subflow properties into msg._data",
         "func": "/**  Preparator function for gauge template
  * 
- * Expects:
- * 
- * Builds messages for sending to the template from the data provided in subflow config
+ * Prepares messages for sending to the template from the data provided in subflow config
+ * this was picked up from the env vars in On Start
  */
 
-msg._data = buildData()
+msg._data = context.get(\"data\")
 return msg;
-
-function buildData() {
-    // builds the data object to be passed to the gauge from the env vars
-    let _data = {}
-    const vars = [\"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\", \"scaleDecimalPlaces\", \"label\", \"measurement\", 
-      \"unit\", \"needles\"]
-    vars.forEach((v) => _data[v] = env.get(v))
-    return _data
-}",
+",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
-        "initialize": "",
+        "initialize": "// Code added here will be run once
+// whenever the node is started.
+
+// build the data object to be passed to the gauge from the env vars
+let data = {}
+const vars = [\"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\", \"scaleDecimalPlaces\", \"label\", \"measurement\", 
+    \"unit\", \"needles\"]
+vars.forEach((v) => data[v] = env.get(v))
+context.set(\"data\", data)",
         "finalize": "",
         "libs": [],
         "x": 400,
