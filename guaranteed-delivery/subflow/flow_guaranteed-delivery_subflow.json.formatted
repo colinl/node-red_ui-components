@@ -3,7 +3,7 @@
         "id": "c7783f078c2779c4",
         "type": "group",
         "z": "bdd7be38.d3b55",
-        "name": "Group to export to node-red_ui-components",
+        "name": "Guaranteed delivery - Group to export to node-red_ui-components",
         "style": {
             "label": true
         },
@@ -248,7 +248,7 @@ switch (stat.state) {
             // we have sent a message so start the timeout timer if required
             // there should not be a timer running already
             if (tickID) {
-                node.warn(`Guaranteed delivery timer already running when it should not be`)
+                node.warn(`Guaranteed delivery timer already running when it should not be ${tickID}`)
                 clearTimeout(tickID)
             }
             const timeout = env.get(\"timeout\")
@@ -307,6 +307,12 @@ function handleOK(stat) {
     if (stat.state === \"waitingForOKFail\") {
         // OK received so drop the top message 
         stat.queue.shift()
+        // stop the timer
+        if (tickID) {
+            clearTimeout(tickID)
+            flow.set(\"tickID\", 0 )
+            tickID = 0
+        }
         // set the state to waiting for message, which will allow the next one to be sent
         stat.state = \"waitingForMsg\"
     } else {
@@ -319,7 +325,12 @@ function handleFAIL(stat) {
     //node.warn(\"handleFAIL\")
     // ignore if in wrong state
     if (stat.state === \"waitingForOKFail\") {
-        // FAIL received so go to waiting for RetryTick state
+        // FAIL received so stop timer and go to waiting for RetryTick state
+        if (tickID) {
+            clearTimeout(tickID)
+            flow.set(\"tickID\", 0 )
+            tickID = 0
+        }
         stat.state = \"waitingForRetryTick\"
     } else {
         node.warn(\"Guaranteed delivery - ignoring unnexpected FAIL\")
