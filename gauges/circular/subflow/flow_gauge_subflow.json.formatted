@@ -55,10 +55,13 @@ Multi line is supported.",
                 }
             },
             {
-                "name": "Width",
+                "name": "width",
                 "type": "num",
                 "value": "4",
                 "ui": {
+                    "label": {
+                        "en-US": "Width"
+                    },
                     "type": "input",
                     "opts": {
                         "types": [
@@ -69,10 +72,13 @@ Multi line is supported.",
                 }
             },
             {
-                "name": "Height",
+                "name": "height",
                 "type": "num",
                 "value": "4",
                 "ui": {
+                    "label": {
+                        "en-US": "Height"
+                    },
                     "type": "input",
                     "opts": {
                         "types": [
@@ -273,7 +279,7 @@ Multi line is supported.",
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.4-Beta.1",
+            "version": "0.0.5-Beta.1",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -293,11 +299,12 @@ A longer **help text** could go here\
         "ui": "",
         "name": "Gauge template",
         "order": 1,
-        "width": "${Width}",
-        "height": "${Height}",
+        "width": "${width}",
+        "height": "${height}",
         "head": "",
-        "format": "<!-- Gauge Template CDL v1.5.1
+        "format": "<!-- Gauge Template CDL
   Based on original work by @HotNipi 
+          <svg ref=\"hn-gauge\" width=\"100%\" :height=\"theHeight\" :viewBox=\"viewbox\">
 -->
 
 <script>
@@ -314,6 +321,8 @@ A longer **help text** could go here\
                 measurement:\"\",
                 valueDecimalPlaces: 2,    // number of decimal places to show in the value display
                 scaleDecimalPlaces: 1,    // number of decimal places to show on the scale
+                width: 4,                   // widget width and height in dashboard units
+                height: 4,
                 // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
                 // start and end are reversed.
                 //  Any gaps are left at background colour
@@ -356,15 +365,16 @@ A longer **help text** could go here\
             // sanity checks - probably there should be more of these
             this.majorDivision = this.majorDivision <= 0  ?  1  : this.majorDivision
             this.minorDivision = this.minorDivision <= 0  ?  1  : this.minorDivision
+
+            this.widgetSizeRatio = this.height/this.width
             return data
         }
     }
 </script>
 
 <template>
-    <div class=\"hn-sng\">
-        <div class=\"label\">{{label}}</div>
-        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" viewBox=\"0 0 100 100\">
+    <div class=\"cdl-gauge hn-sng\">
+        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" :view-box.camel=\"theViewBox()\">
             <g>
                 <path v-for=\"(item, index) in sectors\" :key=\"index\" :ref=\"'sector-' + index\" class=\"sector\" stroke-width=\"5\" :d=\"arcspec\" ></path>                
             </g>
@@ -375,10 +385,11 @@ A longer **help text** could go here\
             </g>         
             <g>
                 <text v-for=\"(item, index) in numbers\" :key=\"index\" class=\"num\" text-anchor=\"middle\" :y=\"`${10.5-this.arc.radius}`\" 
-                  :style=\"`rotate: ${item.r}deg; transform-origin: ${this.arc.cx}% ${this.arc.cy}%; transform: translate(${this.arc.cx}%, ${this.arc.cy}%)`\">
+                  :style=\"`rotate: ${item.r}deg; transform-origin: ${this.arc.cx}% ${this.arc.cy/this.widgetSizeRatio}%; transform: translate(${this.arc.cx}%, ${this.arc.cy/widgetSizeRatio}%)`\">
                   {{item.n}}</text>
             </g>
             <g>
+                <text class=\"label_c\" y=\"0\" x=\"50%\" text-anchor=\"middle\">{{label}}</text>
                 <text class=\"measurement\" y=\"48\" x=\"50%\" text-anchor=\"middle\">{{measurement}}</text>
                 <text class=\"unit\" y=\"75\" x=\"50%\" text-anchor=\"middle\">{{unit}}</text>
                 <text class=\"value\" y=\"90\" x=\"50%\" text-anchor=\"middle\">{{formattedValue}}</text>
@@ -504,6 +515,8 @@ A longer **help text** could go here\
                 this.data = this.msg._data
                 this.min = Number(this.data.min)
                 this.max = Number(this.data.max)
+                this.width = Number(this.data.width)      // width and height in dashboard 2 units - eg 4 x 4
+                this.height = Number(this.data.height)
                 this.sectors = this.data.sectors
                 this.majorDivision = Number(this.data.majorDivision)
                 this.minorDivision = Number(this.data.minorDivision)
@@ -515,6 +528,7 @@ A longer **help text** could go here\
                 this.needles = this.data.needles
                 
                 // this is the first message so do the initial setup
+                this.widgetSizeRatio = this.height/this.width
                 const dal = this.getElement('arc',true).getTotalLength()
                 const sec = this.sectorData(dal)              
                 const gauge = this.getElement('hn-gauge',true)
@@ -532,11 +546,22 @@ A longer **help text** could go here\
                 return `<path d=\"M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z\"
                   fill=\"${colour}\"></path>`
             },
+            theViewBox: function() {
+                //let y = 100*this.data?.height/this.data?.width
+                let y = 100*this.height/this.width
+                if (isNaN(y)) {
+                    console.log(\"y: NaN\")
+                    y = 100
+                }
+                const answer = `0 0 100 ${y}`
+                console.log(`theViewBox: ${answer}, height: ${this.data?.height}, width: ${this.data?.width}`)
+                return answer
+            },
         },
         watch: {
             msg: function(){
                 console.log(`msg: ${JSON.stringify(this.msg)}`)
-                // pick up the subflow config values if they have changed
+                // pick up the subflow config values if this is the first message received
                 if (!this.data) {
                     console.log(\"data changed\")
                     this.pickupProperties()
@@ -566,7 +591,7 @@ A longer **help text** could go here\
                 // Show --- for the value until a valid value is recevied
                 return this.value !== null  ?  this.value.toFixed(this.valueDecimalPlaces)  :  \"---\"
             },
-            numbers:function(){
+            numbers: function(){
                 return this.generateNumbers(this.min,this.max,this.majorDivision)
             },
         },
@@ -590,6 +615,12 @@ A longer **help text** could go here\
         white-space: nowrap;
         text-overflow: ellipsis;
     }
+    .cdl-gauge .label_c {
+        fill:currentColor;
+        font-size:0.5rem;
+        alignment-baseline:hanging 
+    }
+
     .hn-sng .value {
         fill:currentColor;
     }
@@ -657,7 +688,7 @@ return msg;
 
 // build the data object to be passed to the gauge from the env vars
 let data = {}
-const vars = [\"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\", \"scaleDecimalPlaces\", \"label\", \"measurement\", 
+const vars = [\"width\", \"height\", \"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\", \"scaleDecimalPlaces\", \"label\", \"measurement\", 
     \"unit\", \"needles\"]
 vars.forEach((v) => data[v] = env.get(v))
 context.set(\"data\", data)",
@@ -761,21 +792,6 @@ return msg;",
             {
                 "name": "needles",
                 "value": "[{\"topic\":\"A\",\"colour\":\"black\",\"lengthPercent\":100},{\"topic\":\"B\",\"colour\":\"brown\",\"lengthPercent\":67}]",
-                "type": "json"
-            },
-            {
-                "name": "Min",
-                "value": "-0.2",
-                "type": "num"
-            },
-            {
-                "name": "Max",
-                "value": "1.4",
-                "type": "num"
-            },
-            {
-                "name": "Sectors",
-                "value": "[{\"start\":0,\"end\":0.4,\"color\":\"skyblue\"},{\"start\":0.4,\"end\":0.75,\"color\":\"green\"},{\"start\":0.75,\"end\":1.4,\"color\":\"red\"}]",
                 "type": "json"
             }
         ],
