@@ -347,26 +347,8 @@ A longer **help text** could go here\
                 value: null,
             }
             // calculate derived values
-            // make sure startDegrees < endDegrees, but the difference is <= 360
-            while (data.arc.startDegrees >= data.arc.endDegrees) {
-                data.arc.startDegrees -= 360
-            }
-            while (data.arc.endDegrees - data.arc.startDegrees > 360) {
-                data.arc.startDegrees += 360
-            }
-            const startRadians = data.arc.startDegrees * Math.PI/180
-            const endRadians = data.arc.endDegrees * Math.PI/180
-            data.arc.startx = data.arc.cx - data.arc.radius * Math.sin(startRadians-Math.PI)
-            data.arc.starty = data.arc.cy + data.arc.radius * Math.cos(startRadians-Math.PI)
-            data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
-            data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
-            data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+            this.calculateDerivedValues(data)
 
-            // sanity checks - probably there should be more of these
-            this.majorDivision = this.majorDivision <= 0  ?  1  : this.majorDivision
-            this.minorDivision = this.minorDivision <= 0  ?  1  : this.minorDivision
-
-            this.widgetSizeRatio = this.height/this.width
             return data
         }
     }
@@ -408,6 +390,30 @@ A longer **help text** could go here\
 <script>
     export default{
         methods:{
+            calculateDerivedValues: function(data) {
+                // given a reference to the data structure it validates values and calculates derived data
+                // sanity checks - probably there should be more of these
+                data.majorDivision = data.majorDivision <= 0  ?  1  : data.majorDivision
+                data.minorDivision = data.minorDivision <= 0  ?  1  : data.minorDivision
+                // make sure startDegrees < endDegrees, but the difference is <= 360
+                while (data.arc.startDegrees >= data.arc.endDegrees) {
+                    data.arc.startDegrees -= 360
+                }
+                while (data.arc.endDegrees - data.arc.startDegrees > 360) {
+                    data.arc.startDegrees += 360
+                }
+
+                const startRadians = data.arc.startDegrees * Math.PI/180
+                const endRadians = data.arc.endDegrees * Math.PI/180
+                data.arc.startx = data.arc.cx - data.arc.radius * Math.sin(startRadians-Math.PI)
+                data.arc.starty = data.arc.cy + data.arc.radius * Math.cos(startRadians-Math.PI)
+                data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
+                data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
+                data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+
+                data.widgetSizeRatio = data.height/data.width
+
+            },
             getElement: function(name,base){
                 if(base){
                     return this.$refs[name]
@@ -511,8 +517,15 @@ A longer **help text** could go here\
                 return `stroke-dasharray: ${width} ${tickPeriod-width}; stroke-dashoffset: ${width/2};`
             },
             pickupProperties: function() {
-                // pickup subflow properties from this.msg._data
+                // pickup subflow properties from this.msg._data and merge with base properties
                 this.data = this.msg._data
+                // merge in arc data if not present
+                if (!this.data.arc) {
+                    this.data.arc = this.arc
+                }
+                // recalculate derived values
+                this.calculateDerivedValues(this.data)
+                
                 this.min = Number(this.data.min)
                 this.max = Number(this.data.max)
                 this.width = Number(this.data.width)      // width and height in dashboard 2 units - eg 4 x 4
@@ -554,7 +567,7 @@ A longer **help text** could go here\
                     y = 100
                 }
                 const answer = `0 0 100 ${y}`
-                console.log(`theViewBox: ${answer}, height: ${this.data?.height}, width: ${this.data?.width}`)
+                //console.log(`theViewBox: ${answer}, height: ${this.data?.height}, width: ${this.data?.width}`)
                 return answer
             },
         },
