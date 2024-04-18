@@ -296,7 +296,7 @@ Multi line is supported.",
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.6",
+            "version": "0.0.7",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -412,11 +412,23 @@ A longer **help text** could go here\
 
                 const cyLow = 64            // y coord of centre when gauge positioned at bottom of widget
                 const cyHigh = 50           // y coord when chart at top of widget
+                const radius = 47.5         // the usual radius
                 // sanity checks - probably there should be more of these
                 data.majorDivision = data.majorDivision <= 0  ?  1  : data.majorDivision
                 data.minorDivision = data.minorDivision <= 0  ?  1  : data.minorDivision
                 // position chart at top of widget if label is empty
-                data.arc.cy = (data.label && data.label.length > 0)  ? cyLow  :  cyHigh
+                data.arc.radius = radius
+                if (data.label && data.label.length > 0) {
+                    data.arc.cy = cyLow
+                } else {
+                    data.arc.cy = cyHigh
+                    // for the special case of the widget height being exactly 50 svg units (half the height), reduce the radius a bit
+                    // so that the needle hub will be fully visible
+                    if (data.height/data.width == 0.5) {
+                        data.arc.radius -= 2.0  // not quite sure why this is ok with -2 with cy at -2.5
+                        data.arc.cy -= 2.5
+                    }
+                }
                 // position unit and value text above or below centre dependent on whether measurement text is provided
                 if (data.measurement && data.measurement.length > 0) {
                     data.unitTextY = data.arc.cy + 11
@@ -518,9 +530,12 @@ A longer **help text** could go here\
             },
             rotation:function(v){
                 // allow pointer to go 10% off ends of scale, but not more than half way to the other end of the scale
+                // except in the special case of widget height is half the width, in which case only 2% so that needle does not go
+                // off the bottom
+                const factor = (this.height/this.width == 0.5) ? 0.02 : 0.1
                 const deltaDeg = this.arc.endDegrees - this.arc.startDegrees
                 const gapDeg = 360 - deltaDeg
-                const overflowFactor = Math.min(0.1, gapDeg/2/deltaDeg)
+                const overflowFactor = Math.min(factor, gapDeg/2/deltaDeg)
                 const overflow = (this.max-this.min)*overflowFactor
                 const angleOverflow = (deltaDeg)*overflowFactor 
                 const min = this.min - overflow
@@ -847,11 +862,6 @@ return msg;",
                 "name": "needles",
                 "value": "[{\"topic\":\"A\",\"colour\":\"black\",\"lengthPercent\":100},{\"topic\":\"B\",\"colour\":\"brown\",\"lengthPercent\":67}]",
                 "type": "json"
-            },
-            {
-                "name": "sweepAngle",
-                "value": "270",
-                "type": "num"
             }
         ],
         "x": 530,
