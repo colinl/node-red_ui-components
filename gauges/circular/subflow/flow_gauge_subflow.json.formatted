@@ -571,13 +571,15 @@ A longer **help text** could go here\
                 this.needles = this.data.needles
                 this.unitTextY = this.data.unitTextY
                 this.valueTextY = this.data.valueTextY
+                this.sweepAngle = this.data.sweepAngle
                 
                 // this is the first message so do the initial setup
                 this.widgetSizeRatio = this.height/this.width
-                const dal = this.getElement('arc',true).getTotalLength()
-                const sec = this.sectorData(dal)              
+                // determine arc length, radius is 50
+                const arcLength = 2*Math.PI*this.arc.radius * this.sweepAngle/360
+                const sec = this.sectorData(arcLength)
                 const gauge = this.getElement('hn-gauge',true)
-                gauge.style.setProperty('--dash',dal)
+                gauge.style.setProperty('--dash',arcLength)
                 sec.forEach(s =>{
                     const sector = this.getElement(s.name,false)
                     sector.style.setProperty(\"stroke-dasharray\",s.css)
@@ -845,6 +847,11 @@ return msg;",
                 "name": "needles",
                 "value": "[{\"topic\":\"A\",\"colour\":\"black\",\"lengthPercent\":100},{\"topic\":\"B\",\"colour\":\"brown\",\"lengthPercent\":67}]",
                 "type": "json"
+            },
+            {
+                "name": "sweepAngle",
+                "value": "270",
+                "type": "num"
             }
         ],
         "x": 530,
