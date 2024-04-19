@@ -242,7 +242,7 @@ Multi line is supported.",
                 }
             },
             {
-                "name": "unit",
+                "name": "units",
                 "type": "str",
                 "value": "°C",
                 "ui": {
@@ -291,12 +291,29 @@ Multi line is supported.",
                         ]
                     }
                 }
+            },
+            {
+                "name": "class",
+                "type": "str",
+                "value": "",
+                "ui": {
+                    "label": {
+                        "en-US": "Class"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
             }
         ],
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.8",
+            "version": "0.0.9",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -324,8 +341,8 @@ A longer **help text** could go here\
 -->
 
 <template>
-    <div class=\"cdl-gauge hn-sng\">
-        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" :view-box.camel=\"theViewBox\">
+    <div class=\"cdl-gauge\">
+        <svg ref=\"cl-gauge\" width=\"100%\" height=\"100%\" :view-box.camel=\"theViewBox\">
             <g>
                 <path v-for=\"(item, index) in sectors\" :key=\"index\" :ref=\"'sector-' + index\" class=\"sector\" stroke-width=\"5\" :d=\"arcspec\" ></path>                
             </g>
@@ -340,9 +357,9 @@ A longer **help text** could go here\
                   {{item.n}}</text>
             </g>
             <g>
-                <text class=\"label_c\" y=\"0\" x=\"50%\" text-anchor=\"middle\">{{label}}</text>
+                <text class=\"label\" y=\"0\" x=\"50%\" text-anchor=\"middle\">{{label}}</text>
                 <text class=\"measurement\" :y=\"`${this.arc.cy-16}`\" x=\"50%\" text-anchor=\"middle\">{{measurement}}</text>
-                <text class=\"unit\" :y=\"`${this.unitTextY}`\" x=\"50%\" text-anchor=\"middle\">{{unit}}</text>
+                <text class=\"units\" :y=\"`${this.unitsTextY}`\" x=\"50%\" text-anchor=\"middle\">{{units}}</text>
                 <text class=\"value\" :y=\"`${this.valueTextY}`\" x=\"50%\" text-anchor=\"middle\">{{formattedValue}}</text>
             </g>
             <g v-for=\"(item, index) in needles\" :ref=\"'o-needle-'+index\" class=\"o-needle\" 
@@ -365,7 +382,7 @@ A longer **help text** could go here\
                 max:1,
                 majorDivision: 10,       // number of input units for each (numbered) major division
                 minorDivision: 5,       // number of input units for each minor division
-                unit:\"\",
+                units:\"\",
                 label:\"\",
                 measurement:\"\",
                 valueDecimalPlaces: 2,    // number of decimal places to show in the value display
@@ -405,7 +422,7 @@ A longer **help text** could go here\
 
                 // derived values
                 widgetSizeRatio: 1,
-                unitTextY: 0,
+                unitsTextY: 0,
                 valueTextY: 0,
             }
 
@@ -448,10 +465,10 @@ A longer **help text** could go here\
                 this.valueDecimalPlaces = Number(data.valueDecimalPlaces)
                 this.scaleDecimalPlaces = Number(data.scaleDecimalPlaces)
                 this.label = data.label
-                this.unit = data.unit
+                this.units = data.units
                 this.measurement = data.measurement
                 this.needles = data.needles
-                this.unitTextY = data.unitTextY
+                this.unitsTextY = data.unitsTextY
                 this.valueTextY = data.valueTextY
                 this.sweepAngle = data.sweepAngle || 246
 
@@ -461,7 +478,7 @@ A longer **help text** could go here\
                 // determine arc length, radius is 50
                 const arcLength = 2*Math.PI*this.arc.radius * this.sweepAngle/360
                 const sec = this.sectorData(arcLength)
-                const gauge = this.getElement('hn-gauge',true)
+                const gauge = this.getElement('cl-gauge',true)
                 gauge.style.setProperty('--dash',arcLength)
                 sec.forEach(s =>{
                     const sector = this.getElement(s.name,false)
@@ -491,12 +508,12 @@ A longer **help text** could go here\
                         this.arc.cy -= 2.5
                     }
                 }
-                // position unit and value text above or below centre dependent on whether measurement text is provided
+                // position units and value text above or below centre dependent on whether measurement text is provided
                 if (this.measurement && this.measurement.length > 0) {
-                    this.unitTextY = this.arc.cy + 11
+                    this.unitsTextY = this.arc.cy + 11
                     this.valueTextY = this.arc.cy + 26
                 } else {
-                    this.unitTextY = this.arc.cy - 23
+                    this.unitsTextY = this.arc.cy - 23
                     this.valueTextY = this.arc.cy - 8
                 }
                 // calculate start and end degrees from sweepAngle
@@ -664,55 +681,46 @@ A longer **help text** could go here\
 </script>
 
 <style>
-    .hn-sng{
+    .cdl-gauge{
         position:relative;
     }
-    .hn-sng .label{
-        position:absolute;
-        font-size:1rem;
-        color:currentColor;
-        text-align:center;
-        width:100%;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
+
     .cdl-gauge .label_c {
         fill:currentColor;
         font-size:0.5rem;
-        alignment-baseline:hanging 
+        alignment-baseline:hanging;
     }
 
-    .hn-sng .value {
+    .cdl-gauge .value {
         fill:currentColor;
     }
-    .hn-sng .unit {
+    .cdl-gauge .units {
         fill:currentColor;
         font-size:0.4rem;
     }
-    .hn-sng .measurement {
+    .cdl-gauge .measurement {
         fill:currentColor;
         font-size:0.5rem;
     }
-    .hn-sng .num{
+    .cdl-gauge .num{
         fill:currentColor;
         fill-opacity:0.6;
         font-size:.35rem;
     }
-    .hn-sng .tick-minor{
+    .cdl-gauge .tick-minor{
         fill:none;
         stroke:currentColor;
         stroke-opacity:0.6;
     }
-    .hn-sng .tick-major{
+    .cdl-gauge .tick-major{
         fill:none;
         stroke:currentColor;
     }
-    .hn-sng .sector{        
+    .cdl-gauge .sector{
         fill:none;
         stroke:transparent;      
     } 
-    .hn-sng .o-needle{        
+    .cdl-gauge .o-needle{
         transition:.5s;
     }
     
@@ -721,7 +729,7 @@ A longer **help text** could go here\
         "passthru": true,
         "resendOnRefresh": true,
         "templateScope": "local",
-        "className": "Gauge template",
+        "className": "${class}",
         "x": 920,
         "y": 120,
         "wires": [
@@ -752,7 +760,7 @@ return msg;
 let data = {}
 const vars = [
     \"width\", \"height\", \"min\", \"max\", \"sectors\", \"majorDivision\", \"minorDivision\", \"valueDecimalPlaces\",
-    \"scaleDecimalPlaces\", \"label\", \"measurement\", \"unit\", \"needles\", \"sweepAngle\"
+    \"scaleDecimalPlaces\", \"label\", \"measurement\", \"units\", \"needles\", \"sweepAngle\"
 ]
 vars.forEach((v) => data[v] = env.get(v))
 context.set(\"data\", data)",
