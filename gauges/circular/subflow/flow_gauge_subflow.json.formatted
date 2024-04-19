@@ -296,7 +296,7 @@ Multi line is supported.",
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.7",
+            "version": "0.0.8",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -321,59 +321,11 @@ A longer **help text** could go here\
         "head": "",
         "format": "<!-- Gauge Template CDL
   Based on original work by @HotNipi 
-          <svg ref=\"hn-gauge\" width=\"100%\" :height=\"theHeight\" :viewBox=\"viewbox\">
 -->
-
-<script>
-    export default{
-        data(){
-            let data = {
-                // Min and max scale values.  Max may be less that min.
-                min:0,
-                max:1,
-                majorDivision: 10,       // number of input units for each (numbered) major division
-                minorDivision: 5,       // number of input units for each minor division
-                unit:\"\",
-                label:\"\",
-                measurement:\"\",
-                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
-                scaleDecimalPlaces: 1,    // number of decimal places to show on the scale
-                width: 4,                   // widget width and height in dashboard units
-                height: 4,
-                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
-                // start and end are reversed.
-                //  Any gaps are left at background colour
-                sectors:[{start:0,end:0.4,color:\"skyblue\"},{start:0.4,end:0.75,color:\"green\"},{start:0.75,end:1.4,color:\"red\"}],
-
-                needles: [],
-
-                // The position and alignment of the gauge inside the 100x100 svg box for the widget can be changed by modifying the settings below
-                // The origin of the svg box is the top left hand corner. The bottom right hand corner is 100,100
-                // Obviously, if you move the gauge you may have to move the text fields also.
-                // Take care with these settings, if you put silly values in the browser showing the dashboard may lock up. If this happens,
-                // close the dashboard browser tab (which may take some time as it is locked up).
-                arc: {
-                    cx:50,              // the x and y coordinates of the centre of the gauge arc
-                    cy: 64, 
-                    radius: 47.5,       // the radius of the arc
-                    startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
-                    endDegrees: 123,    // +ve values are clockwise
-                },
-
-                //don't change these
-                value: null,
-            }
-            // calculate derived values
-            this.calculateDerivedValues(data)
-
-            return data
-        }
-    }
-</script>
 
 <template>
     <div class=\"cdl-gauge hn-sng\">
-        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" :view-box.camel=\"theViewBox()\">
+        <svg ref=\"hn-gauge\" width=\"100%\" height=\"100%\" :view-box.camel=\"theViewBox\">
             <g>
                 <path v-for=\"(item, index) in sectors\" :key=\"index\" :ref=\"'sector-' + index\" class=\"sector\" stroke-width=\"5\" :d=\"arcspec\" ></path>                
             </g>
@@ -406,54 +358,164 @@ A longer **help text** could go here\
 
 <script>
     export default{
+        data(){
+            let data = {
+                // Min and max scale values.  Max may be less that min.
+                min:0,
+                max:1,
+                majorDivision: 10,       // number of input units for each (numbered) major division
+                minorDivision: 5,       // number of input units for each minor division
+                unit:\"\",
+                label:\"\",
+                measurement:\"\",
+                valueDecimalPlaces: 2,    // number of decimal places to show in the value display
+                scaleDecimalPlaces: 1,    // number of decimal places to show on the scale
+                width: 4,                   // widget width and height in dashboard units
+                height: 4,
+                // Coloured sectors around the scale.  Sectors can be in any order and it makes no difference if 
+                // start and end are reversed.
+                //  Any gaps are left at background colour
+                sectors:[{start:0,end:0.4,color:\"skyblue\"},{start:0.4,end:0.75,color:\"green\"},{start:0.75,end:1.4,color:\"red\"}],
+
+
+                // The position and alignment of the gauge inside the 100x100 svg box for the widget can be changed by modifying the settings below
+                // The origin of the svg box is the top left hand corner. The bottom right hand corner is 100,100
+                // Obviously, if you move the gauge you may have to move the text fields also.
+                // Take care with these settings, if you put silly values in the browser showing the dashboard may lock up. If this happens,
+                // close the dashboard browser tab (which may take some time as it is locked up).
+                arc: {
+                    cx:50,              // the x and y coordinates of the centre of the gauge arc
+                    cy: 64, 
+                    radius: 47.5,       // the radius of the arc
+                    startDegrees: -123, // the angle of the start and end points of the arc.  Zero is vertically up from the centre
+                    endDegrees: 123,    // +ve values are clockwise
+                    // derived values, values here are just to stop errors before first message received
+                    startx: 10,
+                    starty: 90,
+                    endx: 90,
+                    endy: 90,
+                    arclength: 100,
+                },
+                sweepAngle: 246,    // this is not inside arc as it comes from the message
+
+                //don't change these
+                value: null,
+                needles: [],
+                msgReceived: false,     // indicates whether the first message with config data has been received
+
+                // derived values
+                widgetSizeRatio: 1,
+                unitTextY: 0,
+                valueTextY: 0,
+            }
+
+            return data
+        },
+        watch: {
+            msg: function(){
+                console.log(`msg: ${JSON.stringify(this.msg)}`)
+                // pick up the subflow config values if this is the first message received
+                if (!this.msgReceived) {
+                    console.log(\"First message received\")
+                    this.pickupProperties()
+                    this.msgReceived = true
+                }
+                // pickup values and rotation
+                this.needles.forEach((needle, index) => {
+                    const value = this.needles.length === 1  ?  this.msg.payload  :  this.msg.payload[needle.topic]
+                    const v = this.validate(value)
+                    // the value displayed is from the first needle
+                    if (index === 0) {
+                        // value displayed is for the first needle
+                        this.value = v
+                    }
+                    needle.rotation = this.rotation(v)
+                })
+            }
+        },
         methods:{
-            calculateDerivedValues: function(data) {
-                // given a reference to the data structure it validates values and calculates derived data
+            pickupProperties: function() {
+                // pickup subflow properties from this.msg._data and merge with base properties
+                const data = this.msg._data
+                
+                this.min = Number(data.min)
+                this.max = Number(data.max)
+                this.width = Number(data.width)      // width and height in dashboard 2 units - eg 4 x 4
+                this.height = Number(data.height)
+                this.sectors = data.sectors
+                this.majorDivision = Number(data.majorDivision)
+                this.minorDivision = Number(data.minorDivision)
+                this.valueDecimalPlaces = Number(data.valueDecimalPlaces)
+                this.scaleDecimalPlaces = Number(data.scaleDecimalPlaces)
+                this.label = data.label
+                this.unit = data.unit
+                this.measurement = data.measurement
+                this.needles = data.needles
+                this.unitTextY = data.unitTextY
+                this.valueTextY = data.valueTextY
+                this.sweepAngle = data.sweepAngle || 246
+
+                this.calculateDerivedValues()
+                
+                // this is the first message so do the initial setup
+                // determine arc length, radius is 50
+                const arcLength = 2*Math.PI*this.arc.radius * this.sweepAngle/360
+                const sec = this.sectorData(arcLength)
+                const gauge = this.getElement('hn-gauge',true)
+                gauge.style.setProperty('--dash',arcLength)
+                sec.forEach(s =>{
+                    const sector = this.getElement(s.name,false)
+                    sector.style.setProperty(\"stroke-dasharray\",s.css)
+                    sector.style.setProperty(\"stroke\",s.color)
+                })
+            },
+            calculateDerivedValues: function() {
+                // validates values and calculates derived values
 
                 const cyLow = 64            // y coord of centre when gauge positioned at bottom of widget
                 const cyHigh = 50           // y coord when chart at top of widget
                 const radius = 47.5         // the usual radius
                 // sanity checks - probably there should be more of these
-                data.majorDivision = data.majorDivision <= 0  ?  1  : data.majorDivision
-                data.minorDivision = data.minorDivision <= 0  ?  1  : data.minorDivision
+                this.majorDivision = this.majorDivision <= 0  ?  1  : this.majorDivision
+                this.minorDivision = this.minorDivision <= 0  ?  1  : this.minorDivision
                 // position chart at top of widget if label is empty
-                data.arc.radius = radius
-                if (data.label && data.label.length > 0) {
-                    data.arc.cy = cyLow
+                this.arc.radius = radius
+                if (this.label && this.label.length > 0) {
+                    this.arc.cy = cyLow
                 } else {
-                    data.arc.cy = cyHigh
+                    this.arc.cy = cyHigh
                     // for the special case of the widget height being exactly 50 svg units (half the height), reduce the radius a bit
                     // so that the needle hub will be fully visible
-                    if (data.height/data.width == 0.5) {
-                        data.arc.radius -= 2.0  // not quite sure why this is ok with -2 with cy at -2.5
-                        data.arc.cy -= 2.5
+                    if (this.height/this.width == 0.5) {
+                        this.arc.radius -= 2.0  // not quite sure why this is ok with -2 with cy at -2.5
+                        this.arc.cy -= 2.5
                     }
                 }
                 // position unit and value text above or below centre dependent on whether measurement text is provided
-                if (data.measurement && data.measurement.length > 0) {
-                    data.unitTextY = data.arc.cy + 11
-                    data.valueTextY = data.arc.cy + 26
+                if (this.measurement && this.measurement.length > 0) {
+                    this.unitTextY = this.arc.cy + 11
+                    this.valueTextY = this.arc.cy + 26
                 } else {
-                    data.unitTextY = data.arc.cy - 23
-                    data.valueTextY = data.arc.cy - 8
+                    this.unitTextY = this.arc.cy - 23
+                    this.valueTextY = this.arc.cy - 8
                 }
                 // calculate start and end degrees from sweepAngle
                 // check for undefined or 0, both are innapropriate
-                if (data.sweepAngle) {
-                    data.sweepAngle = Math.min(360, data.sweepAngle)
-                    data.arc.startDegrees = -data.sweepAngle/2
-                    data.arc.endDegrees = data.sweepAngle/2
+                if (this.sweepAngle) {
+                    this.sweepAngle = Math.min(360, this.sweepAngle)
+                    this.arc.startDegrees = -this.sweepAngle/2
+                    this.arc.endDegrees = this.sweepAngle/2
                 }
 
-                const startRadians = data.arc.startDegrees * Math.PI/180
-                const endRadians = data.arc.endDegrees * Math.PI/180
-                data.arc.startx = data.arc.cx - data.arc.radius * Math.sin(startRadians-Math.PI)
-                data.arc.starty = data.arc.cy + data.arc.radius * Math.cos(startRadians-Math.PI)
-                data.arc.endx = data.arc.cx + data.arc.radius * Math.sin(Math.PI-endRadians)
-                data.arc.endy = data.arc.cy + data.arc.radius * Math.cos(Math.PI-endRadians)
-                data.arc.arcLength = 2 * Math.PI * data.arc.radius * (data.arc.endDegrees - data.arc.startDegrees)/360
+                const startRadians = this.arc.startDegrees * Math.PI/180
+                const endRadians = this.arc.endDegrees * Math.PI/180
+                this.arc.startx = this.arc.cx - this.arc.radius * Math.sin(startRadians-Math.PI)
+                this.arc.starty = this.arc.cy + this.arc.radius * Math.cos(startRadians-Math.PI)
+                this.arc.endx = this.arc.cx + this.arc.radius * Math.sin(Math.PI-endRadians)
+                this.arc.endy = this.arc.cy + this.arc.radius * Math.cos(Math.PI-endRadians)
+                this.arc.arcLength = 2 * Math.PI * this.arc.radius * (this.arc.endDegrees - this.arc.startDegrees)/360
 
-                data.widgetSizeRatio = data.height/data.width
+                this.widgetSizeRatio = this.height/this.width
 
             },
             getElement: function(name,base){
@@ -468,7 +530,7 @@ A longer **help text** could go here\
                 if(typeof data !== \"number\"){
                     ret = parseFloat(data)
                     if(isNaN(ret)){
-                        console.log(\"BAD DATA! gauge id:\",this.id,\"data:\",data)
+                        console.log(\"INVALID DATA! gauge id:\",this.id,\"data:\",data)
                         ret = null
                     }
                 }                    
@@ -561,46 +623,6 @@ A longer **help text** could go here\
                 // stroke-dashoffset sets the first tick to half width
                 return `stroke-dasharray: ${width} ${tickPeriod-width}; stroke-dashoffset: ${width/2};`
             },
-            pickupProperties: function() {
-                // pickup subflow properties from this.msg._data and merge with base properties
-                this.data = this.msg._data
-                // merge in arc data if not present
-                if (!this.data.arc) {
-                    this.data.arc = this.arc
-                }
-                // recalculate derived values
-                this.calculateDerivedValues(this.data)
-                
-                this.min = Number(this.data.min)
-                this.max = Number(this.data.max)
-                this.width = Number(this.data.width)      // width and height in dashboard 2 units - eg 4 x 4
-                this.height = Number(this.data.height)
-                this.sectors = this.data.sectors
-                this.majorDivision = Number(this.data.majorDivision)
-                this.minorDivision = Number(this.data.minorDivision)
-                this.valueDecimalPlaces = Number(this.data.valueDecimalPlaces)
-                this.scaleDecimalPlaces = Number(this.data.scaleDecimalPlaces)
-                this.label = this.data.label
-                this.unit = this.data.unit
-                this.measurement = this.data.measurement
-                this.needles = this.data.needles
-                this.unitTextY = this.data.unitTextY
-                this.valueTextY = this.data.valueTextY
-                this.sweepAngle = this.data.sweepAngle
-                
-                // this is the first message so do the initial setup
-                this.widgetSizeRatio = this.height/this.width
-                // determine arc length, radius is 50
-                const arcLength = 2*Math.PI*this.arc.radius * this.sweepAngle/360
-                const sec = this.sectorData(arcLength)
-                const gauge = this.getElement('hn-gauge',true)
-                gauge.style.setProperty('--dash',arcLength)
-                sec.forEach(s =>{
-                    const sector = this.getElement(s.name,false)
-                    sector.style.setProperty(\"stroke-dasharray\",s.css)
-                    sector.style.setProperty(\"stroke\",s.color)
-                })
-            },
             needle: function(lengthPercent, colour) {
                 const cx = this.arc.cx
                 const cy = this.arc.cy
@@ -608,38 +630,6 @@ A longer **help text** could go here\
                 return `<path d=\"M ${cx},${cy} ${cx-1.5},${cy} ${cx-0.15},${cy-length} ${cx+0.15},${cy-length} ${cx+1.5},${cy} z\"
                   fill=\"${colour}\"></path>`
             },
-            theViewBox: function() {
-                //let y = 100*this.data?.height/this.data?.width
-                let y = 100*this.height/this.width
-                if (isNaN(y)) {
-                    console.log(\"y: NaN\")
-                    y = 100
-                }
-                const answer = `0 0 100 ${y}`
-                //console.log(`theViewBox: ${answer}, height: ${this.data?.height}, width: ${this.data?.width}`)
-                return answer
-            },
-        },
-        watch: {
-            msg: function(){
-                console.log(`msg: ${JSON.stringify(this.msg)}`)
-                // pick up the subflow config values if this is the first message received
-                if (!this.data) {
-                    console.log(\"data changed\")
-                    this.pickupProperties()
-                }
-                // pickup values and rotation
-                this.needles.forEach((needle, index) => {
-                    const value = this.needles.length === 1  ?  this.msg.payload  :  this.msg.payload[needle.topic]
-                    const v = this.validate(value)
-                    // the value displayed is from the first needle
-                    if (index === 0) {
-                        // value displayed is for the first needle
-                        this.value = v
-                    }
-                    needle.rotation = this.rotation(v)
-                })
-            }
         },
         computed: {
             arcspec: function() {
@@ -656,6 +646,16 @@ A longer **help text** could go here\
             numbers: function() {
                 return this.generateNumbers(this.min,this.max,this.majorDivision)
             },
+            theViewBox: function() {
+                let y = 100*this.height/this.width
+                if (isNaN(y)) {
+                    //console.log(\"y: NaN\")
+                    y = 100
+                }
+                const answer = `0 0 100 ${y}`
+                //console.log(`theViewBox: ${answer}, height: ${this.height}, width: ${this.width}`)
+                return answer
+            }
         },
         mounted(){
         }
