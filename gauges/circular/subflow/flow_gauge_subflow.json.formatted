@@ -313,7 +313,7 @@ Multi line is supported.",
         "meta": {
             "module": "@colinl/node-red-gauge",
             "type": "ui-gauge-cdl",
-            "version": "0.0.9",
+            "version": "0.0.10",
             "author": "Colin Law",
             "desc": "# A node red *gauge* for @flowfuse/node-red-dashboard\
 A longer **help text** could go here\
@@ -685,7 +685,7 @@ A longer **help text** could go here\
         position:relative;
     }
 
-    .cdl-gauge .label_c {
+    .cdl-gauge .label {
         fill:currentColor;
         font-size:0.5rem;
         alignment-baseline:hanging;
